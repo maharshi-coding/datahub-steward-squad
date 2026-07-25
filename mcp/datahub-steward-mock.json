@@ -1,0 +1,16 @@
+{
+  "_comment": "Point any MCP host (Claude Desktop, etc.) at the bundled mock DataHub MCP server. No credentials required. Set 'cwd' to the absolute path of this repo, or run from that directory. Drop '--enable-mutations' to serve read-only tools.",
+  "mcpServers": {
+    "datahub-steward-mock": {
+      "command": "python3",
+      "args": [
+        "-m",
+        "datahub_steward_squad.mcp_server",
+        "--fixture",
+        "examples/retail_finance_graph.json",
+        "--enable-mutations"
+      ],
+      "cwd": "<absolute-path-to-this-repo>"
+    }
+  }
+}

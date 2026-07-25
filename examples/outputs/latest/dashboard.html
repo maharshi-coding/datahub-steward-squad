@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DataHub Steward Squad Dashboard</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --ink: #18212f;
+      --muted: #5e6b7d;
+      --line: #d7dee8;
+      --panel: #ffffff;
+      --bg: #f4f7fb;
+      --hero: #0d1b2f;
+      --hero-ink: #eaf1fb;
+      --hero-muted: #a9bdd6;
+      --accent: #14b8a6;
+      --crit: #b42318;
+      --high: #b54708;
+      --med: #7a5c00;
+      --now: #b42318;
+      --soon: #b54708;
+      --monitor: #475569;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --ink: #e7edf6;
+        --muted: #9aa7b8;
+        --line: #26303f;
+        --panel: #131c28;
+        --bg: #0b111a;
+        --hero: #0a1522;
+        --crit: #f87171;
+        --high: #fbbf24;
+        --med: #fcd34d;
+        --now: #f87171;
+        --soon: #fbbf24;
+        --monitor: #94a3b8;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+    }
+    header {
+      padding: 36px clamp(20px, 5vw, 72px) 30px;
+      background: radial-gradient(1200px 400px at 15% -10%, #1b3a5c 0%, var(--hero) 60%);
+      color: var(--hero-ink);
+    }
+    .eyebrow { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom: 14px; }
+    .badge {
+      display:inline-flex; align-items:center; gap:8px;
+      background: rgba(20,184,166,.16); color: #7fe7d8;
+      border: 1px solid rgba(20,184,166,.5);
+      padding: 6px 12px; border-radius: 999px; font-size:.8rem; font-weight:600;
+      letter-spacing:.02em;
+    }
+    .badge .dot { width:8px; height:8px; border-radius:50%; background: var(--accent); }
+    .badge.det { background: rgba(148,163,184,.14); color:#cbd5e1; border-color: rgba(148,163,184,.4); }
+    .badge.det .dot { background:#94a3b8; }
+    header p.lede { max-width: 900px; color: var(--hero-muted); margin: 0; }
+    header .headline { max-width: 900px; font-size: clamp(1.1rem, 2.2vw, 1.5rem); font-weight:600; margin: 6px 0 14px; }
+    main { padding: 24px clamp(20px, 5vw, 72px) 56px; }
+    h1 { margin: 0 0 10px; font-size: clamp(2rem, 4vw, 3.4rem); letter-spacing: -0.01em; }
+    h2 { margin: 0 0 16px; font-size: 1.05rem; letter-spacing: 0; }
+    .grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); margin-bottom: 24px; }
+    .stat, .agent, .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .stat { position: relative; overflow: hidden; }
+    .stat span { display: block; color: var(--muted); font-size: .85rem; text-transform: uppercase; letter-spacing:.04em; }
+    .stat strong { display: block; font-size: 2.4rem; margin-top: 6px; line-height:1; }
+    .stat.crit strong { color: var(--crit); }
+    .stat.high strong { color: var(--high); }
+    .panel { margin-bottom: 24px; overflow-x: auto; }
+    ul.metrics { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+    ul.metrics li { display: flex; justify-content: space-between; gap: 16px; border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+    ul.metrics li span { color: var(--muted); }
+    ul.assets { list-style: none; padding: 0; margin: 0; }
+    ul.assets li { display:flex; justify-content: space-between; gap: 16px; border-bottom: 1px solid var(--line); padding: 10px 0; }
+    ul.actions { list-style:none; padding:0; margin:0; display:grid; gap:12px; }
+    li.action { display:flex; gap:14px; align-items:flex-start; border:1px solid var(--line); border-radius:10px; padding:14px; }
+    li.action .rank { flex:0 0 auto; width:30px; height:30px; border-radius:50%; background:var(--accent); color:#04201c; font-weight:700; display:flex; align-items:center; justify-content:center; }
+    li.action .action-head { display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+    li.action p { margin:4px 0 6px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { text-align: left; padding: 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    td.num { text-align:right; font-variant-numeric: tabular-nums; font-weight:600; }
+    th { color: var(--muted); font-size: .8rem; text-transform: uppercase; letter-spacing:.04em; }
+    code { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .82em; color: var(--muted); word-break: break-all; }
+    .pill { display:inline-block; padding: 2px 9px; border-radius: 999px; font-size:.72rem; font-weight:700; letter-spacing:.03em; border:1px solid transparent; }
+    .sev-critical, .urg-now { color: var(--crit); border-color: color-mix(in srgb, var(--crit) 45%, transparent); background: color-mix(in srgb, var(--crit) 12%, transparent); }
+    .sev-high, .urg-soon { color: var(--high); border-color: color-mix(in srgb, var(--high) 45%, transparent); background: color-mix(in srgb, var(--high) 12%, transparent); }
+    .sev-medium { color: var(--med); border-color: color-mix(in srgb, var(--med) 45%, transparent); background: color-mix(in srgb, var(--med) 12%, transparent); }
+    .urg-monitor { color: var(--monitor); border-color: color-mix(in srgb, var(--monitor) 45%, transparent); background: color-mix(in srgb, var(--monitor) 12%, transparent); }
+    .agent h3 { margin: 0 0 8px; }
+    .agent p { color: var(--muted); min-height: 44px; margin: 0 0 8px; }
+    .agent strong { color: var(--accent); font-size:.8rem; letter-spacing:.04em; }
+    .reviewer { margin-top: 6px; padding: 12px 14px; border-left: 3px solid var(--accent); background: color-mix(in srgb, var(--accent) 8%, transparent); border-radius: 6px; color: var(--muted); }
+    footer { padding: 20px clamp(20px, 5vw, 72px) 40px; color: var(--muted); font-size:.85rem; }
+    @media (max-width: 760px) {
+      .grid { grid-template-columns: 1fr 1fr; }
+      table { min-width: 620px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">
+      <span class="badge llm"><span class="dot"></span>Claude reasoning · claude-sonnet-5</span>
+      <span class="badge det"><span class="dot"></span>Every mutation approval-gated</span>
+    </div>
+    <h1>DataHub Steward Squad</h1>
+    <p class="headline">finance.fct_revenue is a certified, high-usage revenue table with a failing data-quality assertion and unclassified PII, and its blast radius extends through two other critical assets.</p>
+    <p class="lede">A failing SQL assertion on finance.fct_revenue (18 negative-revenue rows expected to be 0) threatens a certified, high-usage (423/30d) asset that feeds Executive Revenue KPI, mart_revenue_by_region, and the churn_risk_model. The same table exposes an untagged customer_email column that matches PII heuristics, and both the upstream loader job and the downstream mart carry similar downstream blast-radius risk. Immediate remediation of the assertion and PII tagging is warranted before any schema or freshness changes ship downstream.</p>
+  </header>
+  <main>
+    <section class="grid" aria-label="Severity summary">
+      <div class="stat crit"><span>Critical</span><strong>1</strong></div>
+      <div class="stat high"><span>High</span><strong>4</strong></div>
+      <div class="stat"><span>Medium</span><strong>0</strong></div>
+      <div class="stat"><span>MCP Proposals</span><strong>2</strong></div>
+    </section>
+    <section class="panel">
+      <h2>Prioritized Actions</h2>
+      <ul class="actions">
+        <li class="action">
+          <span class="rank">1</span>
+          <div>
+            <div class="action-head">
+              <strong>Investigate and remediate failing revenue assertion</strong>
+              <span class="pill urg-now">NOW</span>
+            </div>
+            <p>A certified, high-usage table (423/30d) is producing 18 rows of negative revenue against an expected 0, risking downstream financial reporting and model accuracy.</p>
+            <code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code>
+          </div>
+        </li>
+        
+
+        <li class="action">
+          <span class="rank">2</span>
+          <div>
+            <div class="action-head">
+              <strong>Freeze schema/freshness changes on finance.fct_revenue pending quality review</strong>
+              <span class="pill urg-now">NOW</span>
+            </div>
+            <p>This certified, high-usage asset has three critical downstream dependents (analytics.mart_revenue_by_region, Executive Revenue KPI, churn_risk_model) that would propagate any unresolved quality issue.</p>
+            <code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code>
+          </div>
+        </li>
+        
+
+        <li class="action">
+          <span class="rank">3</span>
+          <div>
+            <div class="action-head">
+              <strong>Approve PII tagging for customer_email column</strong>
+              <span class="pill urg-soon">SOON</span>
+            </div>
+            <p>An untagged column matching sensitive-data heuristics on a certified, high-usage table creates compliance exposure until classified.</p>
+            <code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code>
+          </div>
+        </li>
+        
+
+        <li class="action">
+          <span class="rank">4</span>
+          <div>
+            <div class="action-head">
+              <strong>Review governance on finance_daily.load_revenue upstream job</strong>
+              <span class="pill urg-soon">SOON</span>
+            </div>
+            <p>This uncertified loader job feeds finance.fct_revenue and three other critical downstream assets, making it a high-leverage but less-governed control point.</p>
+            <code>urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)</code>
+          </div>
+        </li>
+        
+
+        <li class="action">
+          <span class="rank">5</span>
+          <div>
+            <div class="action-head">
+              <strong>Monitor mart_revenue_by_region for downstream KPI impact</strong>
+              <span class="pill urg-monitor">MONITOR</span>
+            </div>
+            <p>This certified, moderately-used mart directly feeds the Executive Revenue KPI, so upstream issues could surface in executive reporting.</p>
+            <code>urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)</code>
+          </div>
+        </li>
+        </ul>
+      <div class="reviewer">Reviewer note: Before approving MCP-001 and MCP-002, confirm the customer_email column truly contains PII (not a false-positive naming match) and verify the assertion incident note captures the correct owner and remediation timeline.</div>
+    </section>
+    <section class="panel">
+      <h2>Top Findings</h2>
+      <table>
+        <thead><tr><th>Severity</th><th>Finding</th><th>DataHub URN</th><th>Score</th></tr></thead>
+        <tbody>
+        <tr>
+          <td><span class="pill sev-critical">CRITICAL</span></td>
+          <td>finance.fct_revenue has failing sql assertion</td>
+          <td><code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code></td>
+          <td class="num">30</td>
+        </tr>
+        
+
+        <tr>
+          <td><span class="pill sev-high">HIGH</span></td>
+          <td>finance.fct_revenue has downstream production blast radius</td>
+          <td><code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code></td>
+          <td class="num">30</td>
+        </tr>
+        
+
+        <tr>
+          <td><span class="pill sev-high">HIGH</span></td>
+          <td>finance_daily.load_revenue has downstream production blast radius</td>
+          <td><code>urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)</code></td>
+          <td class="num">30</td>
+        </tr>
+        
+
+        <tr>
+          <td><span class="pill sev-high">HIGH</span></td>
+          <td>finance.fct_revenue.customer_email appears sensitive but is not tagged</td>
+          <td><code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code></td>
+          <td class="num">24</td>
+        </tr>
+        
+
+        <tr>
+          <td><span class="pill sev-high">HIGH</span></td>
+          <td>analytics.mart_revenue_by_region has downstream production blast radius</td>
+          <td><code>urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)</code></td>
+          <td class="num">22</td>
+        </tr>
+        </tbody>
+      </table>
+    </section>
+    <section class="panel">
+      <h2>Run Metrics</h2>
+      <ul class="metrics"><li><span>Critical Findings</span><strong>1</strong></li>
+<li><span>Failing Assertions</span><strong>1</strong></li>
+<li><span>High Findings</span><strong>4</strong></li>
+<li><span>High Impact Assets</span><strong>3</strong></li>
+<li><span>Mcp Writeback Proposals</span><strong>2</strong></li>
+<li><span>Missing Description Assets</span><strong>0</strong></li>
+<li><span>Missing Owner Assets</span><strong>0</strong></li>
+<li><span>Pii Classification Gaps</span><strong>1</strong></li>
+<li><span>Selected Assets</span><strong>4</strong></li></ul>
+    </section>
+    <section class="panel">
+      <h2>Agent Team</h2>
+      <div class="grid">
+        <section class="agent">
+          <h3>Catalog Scout</h3>
+          <p>Find the target DataHub assets and obvious metadata coverage gaps</p>
+          <strong>REVIEW</strong>
+        </section>
+        
+
+        <section class="agent">
+          <h3>Lineage Investigator</h3>
+          <p>Trace upstream and downstream blast radius through DataHub lineage</p>
+          <strong>REVIEW</strong>
+        </section>
+        
+
+        <section class="agent">
+          <h3>Quality Sentinel</h3>
+          <p>Find failing assertions, stale assets, and unclassified sensitive fields</p>
+          <strong>REVIEW</strong>
+        </section>
+        
+
+        <section class="agent">
+          <h3>Stewardship Writer</h3>
+          <p>Turn findings into governed DataHub MCP writeback proposals</p>
+          <strong>REVIEW</strong>
+        </section>
+        
+
+        <section class="agent">
+          <h3>Release Captain</h3>
+          <p>Package the run for judges: SQL guardrails, board state, and demo evidence</p>
+          <strong>REVIEW</strong>
+        </section>
+        </div>
+    </section>
+    <section class="panel">
+      <h2>Inspected Assets</h2>
+      <ul class="assets"><li><code>Executive Revenue KPI</code><span>looker</span></li>
+<li><code>finance.fct_revenue</code><span>snowflake</span></li>
+<li><code>analytics.mart_revenue_by_region</code><span>dbt</span></li>
+<li><code>finance_daily.load_revenue</code><span>airflow</span></li></ul>
+    </section>
+  </main>
+  <footer>Generated by DataHub Steward Squad · 2026-07-25T06:04:31.081291+00:00 · Objective: Detect DataHub metadata risks in a Finance data product, reason over lineage and quality, and prepare governed MCP writeback proposals.</footer>
+</body>
+</html>

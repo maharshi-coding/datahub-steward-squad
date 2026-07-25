@@ -1,0 +1,72 @@
+[
+  {
+    "acceptance": [
+      "Selected assets include URNs, owners, domains, descriptions, and schema coverage notes"
+    ],
+    "evidence": [
+      "Selected 4 asset(s)",
+      "Owner gaps: 0",
+      "Description gaps: 0"
+    ],
+    "id": "catalog-scout",
+    "merge_gate": "Evidence is present in run_summary.json and risk_report.md",
+    "owner": "Catalog Scout",
+    "state": "review",
+    "title": "Find the target DataHub assets and obvious metadata coverage gaps"
+  },
+  {
+    "acceptance": [
+      "Each risky asset has upstream/downstream context and an impact tier"
+    ],
+    "evidence": [
+      "High-impact lineage assets: 3"
+    ],
+    "id": "lineage-investigator",
+    "merge_gate": "Evidence is present in run_summary.json and risk_report.md",
+    "owner": "Lineage Investigator",
+    "state": "review",
+    "title": "Trace upstream and downstream blast radius through DataHub lineage"
+  },
+  {
+    "acceptance": [
+      "Quality and policy findings are ranked by severity and DataHub evidence"
+    ],
+    "evidence": [
+      "Failing assertions: 1",
+      "PII classification gaps: 1"
+    ],
+    "id": "quality-sentinel",
+    "merge_gate": "Evidence is present in run_summary.json and risk_report.md",
+    "owner": "Quality Sentinel",
+    "state": "review",
+    "title": "Find failing assertions, stale assets, and unclassified sensitive fields"
+  },
+  {
+    "acceptance": [
+      "MCP writeback plan contains approval-gated mutation tool calls"
+    ],
+    "evidence": [
+      "Generated 2 approval-gated MCP proposal(s)"
+    ],
+    "id": "stewardship-writer",
+    "merge_gate": "Evidence is present in run_summary.json and risk_report.md",
+    "owner": "Stewardship Writer",
+    "state": "review",
+    "title": "Turn findings into governed DataHub MCP writeback proposals"
+  },
+  {
+    "acceptance": [
+      "Generated artifacts are ready for README, demo video, and sample-output review"
+    ],
+    "evidence": [
+      "Generated SQL guardrail artifact",
+      "Generated dashboard and sample output package",
+      "Total findings: 5"
+    ],
+    "id": "release-captain",
+    "merge_gate": "Evidence is present in run_summary.json and risk_report.md",
+    "owner": "Release Captain",
+    "state": "review",
+    "title": "Package the run for judges: SQL guardrails, board state, and demo evidence"
+  }
+]

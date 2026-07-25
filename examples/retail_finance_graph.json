@@ -1,0 +1,297 @@
+{
+  "glossary": {
+    "urn:li:glossaryTerm:Revenue": "Recognized revenue after refunds and credits.",
+    "urn:li:glossaryTerm:PII": "Personally identifiable information requiring classification and controls.",
+    "urn:li:glossaryTerm:Customer": "A person or account that has purchased or engaged with the company."
+  },
+  "documents": [
+    {
+      "title": "Finance Certified Data Product Policy",
+      "body": "Certified Finance assets must have an owner, description, freshness assertion, and PII tags on sensitive schema fields."
+    }
+  ],
+  "assets": [
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.payments,PROD)",
+      "name": "raw.payments",
+      "entity_type": "dataset",
+      "platform": "snowflake",
+      "env": "PROD",
+      "domain": "Finance",
+      "owner": "",
+      "description": "",
+      "tags": ["raw"],
+      "terms": [],
+      "usage_30d": 86,
+      "certified": false,
+      "properties": {
+        "table": "raw.payments"
+      },
+      "columns": [
+        {
+          "name": "payment_id",
+          "native_type": "varchar",
+          "description": "Primary payment identifier."
+        },
+        {
+          "name": "customer_email",
+          "native_type": "varchar"
+        },
+        {
+          "name": "amount_usd",
+          "native_type": "number"
+        },
+        {
+          "name": "_loaded_at",
+          "native_type": "timestamp"
+        }
+      ],
+      "assertions": [
+        {
+          "name": "raw.payments freshness",
+          "kind": "freshness",
+          "status": "FAIL",
+          "last_run_at": "2026-07-24T09:00:00Z",
+          "observed_value": "42 hours",
+          "expected": "<= 24 hours",
+          "notes": "Late Stripe extract after credential rotation."
+        }
+      ]
+    },
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+      "name": "finance.fct_revenue",
+      "entity_type": "dataset",
+      "platform": "snowflake",
+      "env": "PROD",
+      "domain": "Finance",
+      "owner": "urn:li:corpGroup:finance-analytics",
+      "description": "Certified revenue fact table used by Finance and executive reporting.",
+      "tags": ["certified", "tier_1"],
+      "terms": ["urn:li:glossaryTerm:Revenue"],
+      "usage_30d": 423,
+      "certified": true,
+      "properties": {
+        "table": "finance.fct_revenue"
+      },
+      "columns": [
+        {
+          "name": "order_id",
+          "native_type": "varchar",
+          "description": "Order identifier."
+        },
+        {
+          "name": "customer_id",
+          "native_type": "varchar",
+          "description": "Customer identifier.",
+          "terms": ["urn:li:glossaryTerm:Customer"]
+        },
+        {
+          "name": "customer_email",
+          "native_type": "varchar"
+        },
+        {
+          "name": "net_revenue_usd",
+          "native_type": "number",
+          "terms": ["urn:li:glossaryTerm:Revenue"]
+        },
+        {
+          "name": "_loaded_at",
+          "native_type": "timestamp"
+        }
+      ],
+      "assertions": [
+        {
+          "name": "finance.fct_revenue freshness",
+          "kind": "freshness",
+          "status": "PASS",
+          "last_run_at": "2026-07-24T12:05:00Z",
+          "observed_value": "2 hours",
+          "expected": "<= 24 hours"
+        },
+        {
+          "name": "finance.fct_revenue negative revenue check",
+          "kind": "sql",
+          "status": "FAIL",
+          "last_run_at": "2026-07-24T12:06:00Z",
+          "observed_value": "18 rows",
+          "expected": "0 rows",
+          "notes": "Refund adjustments are arriving without offsetting credit memos."
+        }
+      ]
+    },
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD)",
+      "name": "finance.dim_customer",
+      "entity_type": "dataset",
+      "platform": "snowflake",
+      "env": "PROD",
+      "domain": "Finance",
+      "owner": "urn:li:corpGroup:customer-data",
+      "description": "",
+      "tags": ["tier_1"],
+      "terms": ["urn:li:glossaryTerm:Customer"],
+      "usage_30d": 311,
+      "certified": true,
+      "properties": {
+        "table": "finance.dim_customer"
+      },
+      "columns": [
+        {
+          "name": "customer_id",
+          "native_type": "varchar"
+        },
+        {
+          "name": "email_address",
+          "native_type": "varchar",
+          "tags": ["urn:li:tag:PII"]
+        },
+        {
+          "name": "phone_number",
+          "native_type": "varchar"
+        },
+        {
+          "name": "lifecycle_segment",
+          "native_type": "varchar"
+        },
+        {
+          "name": "_loaded_at",
+          "native_type": "timestamp"
+        }
+      ],
+      "assertions": [
+        {
+          "name": "finance.dim_customer freshness",
+          "kind": "freshness",
+          "status": "PASS",
+          "last_run_at": "2026-07-24T10:30:00Z",
+          "observed_value": "4 hours",
+          "expected": "<= 24 hours"
+        }
+      ]
+    },
+    {
+      "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
+      "name": "analytics.mart_revenue_by_region",
+      "entity_type": "dataset",
+      "platform": "dbt",
+      "env": "PROD",
+      "domain": "Finance",
+      "owner": "urn:li:corpGroup:analytics-engineering",
+      "description": "Regional revenue mart consumed by finance dashboards.",
+      "tags": ["certified"],
+      "terms": ["urn:li:glossaryTerm:Revenue"],
+      "usage_30d": 203,
+      "certified": true,
+      "properties": {
+        "table": "analytics.mart_revenue_by_region"
+      },
+      "columns": [
+        {
+          "name": "region",
+          "native_type": "varchar"
+        },
+        {
+          "name": "net_revenue_usd",
+          "native_type": "number",
+          "terms": ["urn:li:glossaryTerm:Revenue"]
+        },
+        {
+          "name": "reporting_month",
+          "native_type": "date"
+        },
+        {
+          "name": "_loaded_at",
+          "native_type": "timestamp"
+        }
+      ],
+      "assertions": [
+        {
+          "name": "region completeness",
+          "kind": "field",
+          "status": "PASS",
+          "last_run_at": "2026-07-24T11:15:00Z",
+          "observed_value": "0 nulls",
+          "expected": "0 nulls"
+        }
+      ]
+    },
+    {
+      "urn": "urn:li:dashboard:(looker,executive_revenue_kpi)",
+      "name": "Executive Revenue KPI",
+      "entity_type": "dashboard",
+      "platform": "looker",
+      "env": "PROD",
+      "domain": "Finance",
+      "owner": "urn:li:corpGroup:executive-analytics",
+      "description": "Board-facing revenue dashboard.",
+      "tags": ["executive", "tier_1"],
+      "usage_30d": 509,
+      "certified": true
+    },
+    {
+      "urn": "urn:li:mlModel:(urn:li:dataPlatform:mlflow,churn_risk_model,PROD)",
+      "name": "churn_risk_model",
+      "entity_type": "mlmodel",
+      "platform": "mlflow",
+      "env": "PROD",
+      "domain": "Customer",
+      "owner": "urn:li:corpGroup:ml-platform",
+      "description": "Predicts churn risk using customer and revenue features.",
+      "tags": ["production"],
+      "usage_30d": 146,
+      "certified": true
+    },
+    {
+      "urn": "urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)",
+      "name": "finance_daily.load_revenue",
+      "entity_type": "datajob",
+      "platform": "airflow",
+      "env": "PROD",
+      "domain": "Finance",
+      "owner": "urn:li:corpGroup:data-platform",
+      "description": "Daily revenue pipeline loading Snowflake Finance tables.",
+      "tags": ["scheduled"],
+      "usage_30d": 31,
+      "certified": false
+    }
+  ],
+  "lineage": [
+    {
+      "upstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.payments,PROD)",
+      "downstream": "urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)",
+      "edge_type": "ORCHESTRATES"
+    },
+    {
+      "upstream": "urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)",
+      "downstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+      "edge_type": "PRODUCES"
+    },
+    {
+      "upstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD)",
+      "downstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+      "edge_type": "JOINED"
+    },
+    {
+      "upstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+      "downstream": "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
+      "edge_type": "TRANSFORMED"
+    },
+    {
+      "upstream": "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
+      "downstream": "urn:li:dashboard:(looker,executive_revenue_kpi)",
+      "edge_type": "VISUALIZED"
+    },
+    {
+      "upstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD)",
+      "downstream": "urn:li:mlModel:(urn:li:dataPlatform:mlflow,churn_risk_model,PROD)",
+      "edge_type": "FEATURE"
+    },
+    {
+      "upstream": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+      "downstream": "urn:li:mlModel:(urn:li:dataPlatform:mlflow,churn_risk_model,PROD)",
+      "edge_type": "FEATURE"
+    }
+  ]
+}
+

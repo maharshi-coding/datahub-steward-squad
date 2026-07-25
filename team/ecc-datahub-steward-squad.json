@@ -1,0 +1,49 @@
+{
+  "version": "1.0",
+  "inspired_by": "affaan-m/ECC team-builder and team-agent-orchestration patterns",
+  "project": "DataHub Steward Squad",
+  "max_agents": 5,
+  "reasoning_engine": {
+    "modes": ["auto", "llm", "deterministic"],
+    "default": "auto",
+    "llm": "Claude (ANTHROPIC_API_KEY); falls back to deterministic when absent"
+  },
+  "operating_model": {
+    "states": ["backlog", "ready", "running", "review", "blocked", "merged", "archived"],
+    "merge_gate": "Generated artifacts exist, tests pass, and mutation plans remain approval-gated."
+  },
+  "coordinator": {
+    "name": "Chief Steward",
+    "file": "agents/chief-steward.md",
+    "owns": ["executive brief", "prioritized remediation plan"],
+    "engine": "Claude when available, else deterministic template"
+  },
+  "agents": [
+    {
+      "name": "Catalog Scout",
+      "file": "agents/catalog-scout.md",
+      "owns": ["asset selection", "metadata coverage gaps"]
+    },
+    {
+      "name": "Lineage Investigator",
+      "file": "agents/lineage-investigator.md",
+      "owns": ["upstream lineage", "downstream impact"]
+    },
+    {
+      "name": "Quality Sentinel",
+      "file": "agents/quality-sentinel.md",
+      "owns": ["assertion failures", "PII classification"]
+    },
+    {
+      "name": "Stewardship Writer",
+      "file": "agents/stewardship-writer.md",
+      "owns": ["DataHub MCP writeback proposals", "context document"]
+    },
+    {
+      "name": "Release Captain",
+      "file": "agents/release-captain.md",
+      "owns": ["sample outputs", "demo evidence", "team board"]
+    }
+  ]
+}
+

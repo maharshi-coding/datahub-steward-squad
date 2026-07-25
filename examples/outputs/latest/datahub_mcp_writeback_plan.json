@@ -1,0 +1,46 @@
+{
+  "generated_at": "2026-07-25T06:04:31.081291+00:00",
+  "kind": "datahub_mcp_writeback_plan",
+  "mcp_server": "datahub",
+  "notes": [
+    "Mutation tools must be enabled on the DataHub MCP server.",
+    "Review every proposal before calling the tool in a live DataHub tenant."
+  ],
+  "requires_human_approval": true,
+  "tool_calls": [
+    {
+      "arguments": {
+        "field_path": "customer_email",
+        "tags": [
+          "urn:li:tag:PII"
+        ],
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)"
+      },
+      "description": "Classify finance.fct_revenue.customer_email as PII",
+      "finding_ids": [
+        "PII-005"
+      ],
+      "id": "MCP-001",
+      "requires_approval": true,
+      "tool": "add_tags"
+    },
+    {
+      "arguments": {
+        "content": "# Steward Squad Risk Brief\n\nObjective: Detect DataHub metadata risks in a Finance data product, reason over lineage and quality, and prepare governed MCP writeback proposals.\nFocus domain: Finance\nAssets inspected: 4\n\n## Top Findings\n\n### HIGH: finance.fct_revenue has downstream production blast radius\n- URN: `urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)`\n- Asset: finance.fct_revenue\n- Score: 30\n- Recommendation: Review quality and governance before schema or freshness changes are shipped.\n\n### HIGH: finance_daily.load_revenue has downstream production blast radius\n- URN: `urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)`\n- Asset: finance_daily.load_revenue\n- Score: 30\n- Recommendation: Review quality and governance before schema or freshness changes are shipped.\n\n### CRITICAL: finance.fct_revenue has failing sql assertion\n- URN: `urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)`\n- Asset: finance.fct_revenue\n- Score: 30\n- Recommendation: Create an incident note, notify the owner, and attach a remediation plan.\n\n### HIGH: finance.fct_revenue.customer_email appears sensitive but is not tagged\n- URN: `urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)`\n- Asset: finance.fct_revenue\n- Score: 24\n- Recommendation: Propose a PII tag or glossary term on the schema field.\n\n### HIGH: analytics.mart_revenue_by_region has downstream production blast radius\n- URN: `urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)`\n- Asset: analytics.mart_revenue_by_region\n- Score: 22\n- Recommendation: Review quality and governance before schema or freshness changes are shipped.\n\n## Proposed Writeback\nEvery mutation is approval-gated. Review the generated MCP plan before applying changes.",
+        "parent_folder": "Agent Stewardship",
+        "title": "Steward Squad Risk Brief"
+      },
+      "description": "Save the squad risk brief into DataHub context documents",
+      "finding_ids": [
+        "LIN-001",
+        "LIN-002",
+        "LIN-003",
+        "QLT-004",
+        "PII-005"
+      ],
+      "id": "MCP-002",
+      "requires_approval": true,
+      "tool": "save_document"
+    }
+  ]
+}
