@@ -14,6 +14,8 @@ from pathlib import Path
 from datahub_steward_squad.live import (
     LiveConfigError,
     LiveDataHubMCPGateway,
+    _failing_assertion_causes,
+    _parse_assertion_info,
     live_server_command,
     live_server_env,
     load_dotenv,
@@ -174,6 +176,82 @@ class LiveGatewayTest(unittest.TestCase):
                             arguments={"urn": FCT, "field_path": "x", "tags": ["urn:li:tag:PII"]}, finding_ids=[])
         results = gateway.apply_proposals([proposal], approved_ids=set())
         self.assertEqual(results[0]["status"], "skipped")
+
+
+class AssertionHealthTest(unittest.TestCase):
+    def test_failing_assertion_causes_from_health(self):
+        raw = {
+            "health": [
+                {"type": "INCIDENTS", "status": "PASS"},
+                {
+                    "type": "ASSERTIONS",
+                    "status": "FAIL",
+                    "message": "1 of 1 assertions are failing",
+                    "causes": ["urn:li:assertion:a1"],
+                },
+            ]
+        }
+        causes, message = _failing_assertion_causes(raw)
+        self.assertEqual(causes, ["urn:li:assertion:a1"])
+        self.assertIn("failing", message)
+
+    def test_no_causes_when_assertions_pass(self):
+        raw = {"health": [{"type": "ASSERTIONS", "status": "PASS"}]}
+        self.assertEqual(_failing_assertion_causes(raw), ([], ""))
+
+    def test_parse_assertion_info(self):
+        info = _parse_assertion_info(
+            {"info": {"type": "SQL", "description": "negative revenue check"}}
+        )
+        self.assertEqual(info, {"kind": "sql", "name": "negative revenue check"})
+
+    def test_build_graph_attaches_failing_assertion(self):
+        ds = "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)"
+        assertion = "urn:li:assertion:steward-fct-1"
+
+        class FakeAssertionClient:
+            def __init__(self):
+                self.calls = []
+
+            def call_tool(self, name, arguments=None):
+                arguments = arguments or {}
+                self.calls.append((name, arguments))
+                if name == "search":
+                    return {"searchResults": [{"entity": {"urn": ds}}]}
+                if name == "get_entities":
+                    out = []
+                    for u in arguments.get("urns", []):
+                        if u == ds:
+                            out.append(
+                                {
+                                    "urn": ds,
+                                    "properties": {"name": "finance.fct_revenue"},
+                                    "health": [
+                                        {
+                                            "type": "ASSERTIONS",
+                                            "status": "FAIL",
+                                            "message": "1 of 2 assertions are failing",
+                                            "causes": [assertion],
+                                        }
+                                    ],
+                                }
+                            )
+                        elif u == assertion:
+                            out.append(
+                                {
+                                    "urn": assertion,
+                                    "info": {"type": "SQL", "description": "negative revenue check"},
+                                }
+                            )
+                    return out
+                return {}  # get_lineage
+
+        graph = LiveDataHubMCPGateway(FakeAssertionClient()).build_graph()
+        assertions = graph.assets[ds].assertions
+        self.assertEqual(len(assertions), 1)
+        self.assertEqual(assertions[0].status, "FAIL")
+        self.assertEqual(assertions[0].kind, "sql")
+        self.assertEqual(assertions[0].name, "negative revenue check")
 
 
 class LiveConfigTest(unittest.TestCase):

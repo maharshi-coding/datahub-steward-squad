@@ -64,7 +64,10 @@ through the official `mcp-server-datahub`:
     `get_entities` / `get_lineage` responses (nested, camelCase — `platform:{urn,name}`,
     `customProperties:[{key,value}]`, `ownership.owners[].owner.urn`,
     `{upstreams/downstreams:{searchResults:[{entity,degree}]}}`) into `Asset` /
-    `LineageEdge`.
+    `LineageEdge`. It also reads the dataset `health` array to raise failing-assertion
+    findings (DataHub's `ASSERTIONS` health signal, so no cloud-only tool is needed),
+    and pulls non-dataset lineage neighbours (datajobs, dashboards) into the graph so
+    the Lineage Investigator can name production blast radius by entity type.
   - **`read_asset`** normalizes a live entity back into the same `Asset`-shaped
     dict the verification step already understands.
   - **`_apply_one`** routes through `translate_proposal`, which maps the squad's

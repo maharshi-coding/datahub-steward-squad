@@ -134,7 +134,11 @@ python3 -m datahub_steward_squad mcp-demo --live
 python3 -m datahub_steward_squad mcp-demo --live --apply
 ```
 
-Recorded live verification output ([evidence/live_mcp_loop_full.txt](evidence/live_mcp_loop_full.txt)) — real
+Against the seeded catalog the live loop detects the same risk classes as the
+offline demo — missing owners/descriptions, unclassified PII columns, lineage
+blast radius (naming the real datajob and dashboard), and **failing data-quality
+assertions** (read from DataHub's dataset `health` signal). Recorded live
+verification output ([evidence/live_mcp_loop_full.txt](evidence/live_mcp_loop_full.txt)) — real
 descriptions and column PII tags written through `mcp-server-datahub` and
 confirmed by re-reading:
 

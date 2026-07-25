@@ -26,7 +26,7 @@ from pathlib import Path
 from typing import Any
 
 from .gateway import DataHubMCPGateway
-from .models import Asset, Column, DataHubGraph, LineageEdge, Proposal
+from .models import Asset, AssertionResult, Column, DataHubGraph, LineageEdge, Proposal
 
 # The official self-hosted DataHub MCP server. Override with DATAHUB_MCP_COMMAND
 # (space-separated) to pin a version or use a different launcher.
@@ -213,6 +213,33 @@ def _domain_name(raw: dict[str, Any], custom: dict[str, str]) -> str:
     return name or custom.get("domain", "")
 
 
+def _failing_assertion_causes(raw: dict[str, Any]) -> tuple[list[str], str]:
+    """Read the dataset 'health' array for a failing-assertions signal.
+
+    DataHub computes an ``ASSERTIONS`` health entry from assertion run events and
+    exposes it on ``get_entities`` (no cloud-only tool needed). Returns the cause
+    assertion URNs and a human message, e.g. "1 of 1 assertions are failing".
+    """
+    for entry in raw.get("health") or []:
+        if not isinstance(entry, dict):
+            continue
+        if entry.get("type") == "ASSERTIONS" and str(entry.get("status", "")).upper() in {
+            "FAIL",
+            "WARN",
+            "ERROR",
+        }:
+            return list(entry.get("causes") or []), entry.get("message") or "failing assertions"
+    return [], ""
+
+
+def _parse_assertion_info(raw: dict[str, Any]) -> dict[str, str]:
+    """Turn a fetched Assertion entity into a (kind, name) pair for a finding."""
+    info = raw.get("info") or {}
+    kind = str(info.get("type") or "data quality").lower()
+    name = info.get("description") or f"{kind} assertion"
+    return {"kind": kind, "name": name}
+
+
 def _entity_type_from_urn(urn: str) -> str:
     prefixes = {
         "urn:li:dataset:": "dataset",
@@ -345,16 +372,9 @@ class LiveDataHubMCPGateway(DataHubMCPGateway):
             if (sr.get("entity") or {}).get("urn")
         ]
 
-        assets: dict[str, Asset] = {}
-        if urns:
-            entities = self.client.call_tool("get_entities", {"urns": urns}) or []
-            if isinstance(entities, dict):
-                entities = [entities]
-            for entity in entities:
-                if not isinstance(entity, dict) or entity.get("error") or "urn" not in entity:
-                    continue
-                asset = parse_entity(entity)
-                assets[asset.urn] = asset
+        raw_by_urn = self._fetch_entities(urns)
+        assets: dict[str, Asset] = {urn: parse_entity(raw) for urn, raw in raw_by_urn.items()}
+        self._attach_failing_assertions(assets, raw_by_urn)
 
         edges: dict[tuple[str, str], LineageEdge] = {}
         for urn in list(assets):
@@ -378,7 +398,60 @@ class LiveDataHubMCPGateway(DataHubMCPGateway):
                         upstream=upstream, downstream=downstream
                     )
 
+        # Pull in non-dataset lineage neighbours (datajobs, dashboards, ML models)
+        # so the Lineage Investigator can see production blast radius by entity type.
+        neighbours = {u for edge in edges for u in (edge[0], edge[1])}
+        missing = [u for u in neighbours if u not in assets]
+        for urn, raw in self._fetch_entities(missing).items():
+            assets[urn] = parse_entity(raw)
+
         return DataHubGraph(assets=assets, lineage=list(edges.values()))
+
+    def _fetch_entities(self, urns: list[str]) -> dict[str, dict[str, Any]]:
+        if not urns:
+            return {}
+        entities = self.client.call_tool("get_entities", {"urns": urns}) or []
+        if isinstance(entities, dict):
+            entities = [entities]
+        return {
+            entity["urn"]: entity
+            for entity in entities
+            if isinstance(entity, dict) and "urn" in entity and not entity.get("error")
+        }
+
+    def _attach_failing_assertions(
+        self, assets: dict[str, Asset], raw_by_urn: dict[str, dict[str, Any]]
+    ) -> None:
+        """Turn each dataset's failing-assertions health signal into findings.
+
+        The read tools don't return assertion aspects directly, but the dataset
+        'health' array names the failing assertion URNs; fetching those gives the
+        assertion type + description for a proper QLT finding.
+        """
+        pending: dict[str, tuple[list[str], str]] = {}
+        cause_urns: set[str] = set()
+        for urn, raw in raw_by_urn.items():
+            causes, message = _failing_assertion_causes(raw)
+            if causes:
+                pending[urn] = (causes, message)
+                cause_urns.update(causes)
+        if not pending:
+            return
+        info_by_urn = {
+            urn: _parse_assertion_info(raw)
+            for urn, raw in self._fetch_entities(list(cause_urns)).items()
+        }
+        for urn, (causes, message) in pending.items():
+            for cause in causes:
+                info = info_by_urn.get(cause, {"kind": "data quality", "name": message})
+                assets[urn].assertions.append(
+                    AssertionResult(
+                        name=info["name"],
+                        kind=info["kind"],
+                        status="FAIL",
+                        notes=message,
+                    )
+                )
 
     def read_asset(self, urn: str) -> dict[str, Any] | None:
         entities = self.client.call_tool("get_entities", {"urns": [urn]}) or []

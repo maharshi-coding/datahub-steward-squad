@@ -24,9 +24,22 @@ from pathlib import Path
 from datahub.emitter.mcp import MetadataChangeProposalWrapper
 from datahub.emitter.rest_emitter import DatahubRestEmitter
 from datahub.metadata.schema_classes import (
+    AssertionInfoClass,
+    AssertionResultClass,
+    AssertionResultTypeClass,
+    AssertionRunEventClass,
+    AssertionRunStatusClass,
+    AssertionStdOperatorClass,
+    AssertionStdParameterClass,
+    AssertionStdParametersClass,
+    AssertionStdParameterTypeClass,
+    AssertionTypeClass,
     AuditStampClass,
     ChangeAuditStampsClass,
     DashboardInfoClass,
+    DataFlowInfoClass,
+    DataJobInfoClass,
+    DataJobInputOutputClass,
     DatasetLineageTypeClass,
     DatasetPropertiesClass,
     DateTypeClass,
@@ -45,6 +58,8 @@ from datahub.metadata.schema_classes import (
     SchemaFieldClass,
     SchemaFieldDataTypeClass,
     SchemaMetadataClass,
+    SqlAssertionInfoClass,
+    SqlAssertionTypeClass,
     StringTypeClass,
     TagAssociationClass,
     TagPropertiesClass,
@@ -194,7 +209,7 @@ def _add_common_aspects(mcps: list, asset: dict) -> None:
         )
 
 
-def _mcps_for_dashboard(asset: dict) -> list[MetadataChangeProposalWrapper]:
+def _mcps_for_dashboard(asset: dict, input_datasets: list[str]) -> list[MetadataChangeProposalWrapper]:
     mcps = [
         MetadataChangeProposalWrapper(
             entityUrn=asset["urn"],
@@ -202,6 +217,9 @@ def _mcps_for_dashboard(asset: dict) -> list[MetadataChangeProposalWrapper]:
                 title=asset["name"],
                 description=asset.get("description", ""),
                 lastModified=ChangeAuditStampsClass(created=_STAMP, lastModified=_STAMP),
+                # Input datasets create dataset->dashboard lineage, so the squad
+                # sees the dashboard as downstream production blast radius.
+                datasets=sorted(input_datasets) or None,
                 customProperties={
                     "usage_30d": str(asset.get("usage_30d", 0)),
                     "domain": asset.get("domain", ""),
@@ -210,6 +228,106 @@ def _mcps_for_dashboard(asset: dict) -> list[MetadataChangeProposalWrapper]:
         )
     ]
     _add_common_aspects(mcps, asset)
+    return mcps
+
+
+def _mcps_for_datajob(
+    asset: dict, inputs: list[str], outputs: list[str]
+) -> list[MetadataChangeProposalWrapper]:
+    """Emit the DataFlow parent, the DataJob, and its input/output lineage.
+
+    DataJobInputOutput wires raw.payments -> job -> fct_revenue, so get_lineage
+    surfaces the job as a direct neighbour and the squad flags its blast radius.
+    """
+    # DataJob URN embeds its parent DataFlow: urn:li:dataJob:(<dataFlowUrn>,<id>)
+    flow_urn = asset["urn"].split("(", 1)[1].rsplit(",", 1)[0]
+    orchestrator = flow_urn.split("(", 1)[1].split(",", 1)[0]
+    mcps = [
+        MetadataChangeProposalWrapper(
+            entityUrn=flow_urn,
+            aspect=DataFlowInfoClass(name=asset["name"].split(".")[0], customProperties={}),
+        ),
+        MetadataChangeProposalWrapper(
+            entityUrn=asset["urn"],
+            aspect=DataJobInfoClass(
+                name=asset["name"],
+                type=orchestrator.upper() if orchestrator else "COMMAND",
+                description=asset.get("description", ""),
+                customProperties={
+                    "usage_30d": str(asset.get("usage_30d", 0)),
+                    "domain": asset.get("domain", ""),
+                },
+            ),
+        ),
+        MetadataChangeProposalWrapper(
+            entityUrn=asset["urn"],
+            aspect=DataJobInputOutputClass(
+                inputDatasets=sorted(inputs), outputDatasets=sorted(outputs)
+            ),
+        ),
+    ]
+    _add_common_aspects(mcps, asset)
+    return mcps
+
+
+def _safe_id(text: str) -> str:
+    return "".join(c if c.isalnum() else "-" for c in text).strip("-")
+
+
+def _assertion_mcps(graph: dict) -> list[MetadataChangeProposalWrapper]:
+    """Emit each fixture assertion as an Assertion entity + a run event.
+
+    A FAILURE run event makes DataHub compute an ASSERTIONS 'health' signal on the
+    dataset (FAIL), which the live adapter reads to raise a quality finding —
+    without relying on the cloud-only get_dataset_assertions tool.
+    """
+    mcps: list[MetadataChangeProposalWrapper] = []
+    for asset in graph["assets"]:
+        dataset_urn = asset["urn"]
+        for idx, assertion in enumerate(asset.get("assertions", [])):
+            a_urn = f"urn:li:assertion:steward-{_safe_id(asset['name'])}-{idx}"
+            statement = (
+                assertion.get("notes")
+                or f"{assertion.get('kind', 'data quality')} check for {asset['name']}"
+            )
+            mcps.append(
+                MetadataChangeProposalWrapper(
+                    entityUrn=a_urn,
+                    aspect=AssertionInfoClass(
+                        type=AssertionTypeClass.SQL,
+                        description=assertion.get("name", statement),
+                        sqlAssertion=SqlAssertionInfoClass(
+                            type=SqlAssertionTypeClass.METRIC,
+                            entity=dataset_urn,
+                            statement=statement,
+                            operator=AssertionStdOperatorClass.EQUAL_TO,
+                            parameters=AssertionStdParametersClass(
+                                value=AssertionStdParameterClass(
+                                    value="0", type=AssertionStdParameterTypeClass.NUMBER
+                                )
+                            ),
+                        ),
+                    ),
+                )
+            )
+            failed = str(assertion.get("status", "")).upper() in {"FAIL", "FAILED", "ERROR"}
+            mcps.append(
+                MetadataChangeProposalWrapper(
+                    entityUrn=a_urn,
+                    aspect=AssertionRunEventClass(
+                        timestampMillis=NOW_MS,
+                        runId=f"steward-{idx}",
+                        asserteeUrn=dataset_urn,
+                        assertionUrn=a_urn,
+                        status=AssertionRunStatusClass.COMPLETE,
+                        result=AssertionResultClass(
+                            type=AssertionResultTypeClass.FAILURE
+                            if failed
+                            else AssertionResultTypeClass.SUCCESS
+                        ),
+                    ),
+                )
+            )
     return mcps
 
 
@@ -241,13 +359,8 @@ def _lineage_mcps(graph: dict) -> list[MetadataChangeProposalWrapper]:
         up, down = edge["upstream"], edge["downstream"]
         if up in dataset_urns and down in dataset_urns:
             downstream_to_upstreams.setdefault(down, []).append(up)
-    # Bridge dataset->datajob->dataset so raw.payments reaches fct_revenue directly.
-    for edge in graph.get("lineage", []):
-        up, down = edge["upstream"], edge["downstream"]
-        if up in dataset_urns and down not in dataset_urns:
-            for edge2 in graph.get("lineage", []):
-                if edge2["upstream"] == down and edge2["downstream"] in dataset_urns:
-                    downstream_to_upstreams.setdefault(edge2["downstream"], []).append(up)
+    # raw.payments -> fct_revenue now flows through the real datajob (see
+    # _mcps_for_datajob), so no synthetic dataset->dataset bridge is needed.
 
     mcps = []
     for down, ups in downstream_to_upstreams.items():
@@ -299,19 +412,33 @@ def main() -> int:
             )
         )
 
+    # Precompute cross-type lineage relationships from the fixture edges.
+    dataset_urns = {a["urn"] for a in graph["assets"] if a.get("entity_type") == "dataset"}
+    inputs_of: dict[str, list[str]] = {}   # entity <- upstream datasets
+    outputs_of: dict[str, list[str]] = {}  # entity -> downstream datasets
+    for edge in graph.get("lineage", []):
+        up, down = edge["upstream"], edge["downstream"]
+        if up in dataset_urns:
+            inputs_of.setdefault(down, []).append(up)
+        if down in dataset_urns:
+            outputs_of.setdefault(up, []).append(down)
+
     # 2) Assets.
     for asset in graph["assets"]:
         kind = asset.get("entity_type")
+        urn = asset["urn"]
         if kind == "dataset":
             mcps.extend(_mcps_for_dataset(asset))
         elif kind == "dashboard":
-            mcps.extend(_mcps_for_dashboard(asset))
+            mcps.extend(_mcps_for_dashboard(asset, inputs_of.get(urn, [])))
         elif kind == "mlmodel":
             mcps.extend(_mcps_for_mlmodel(asset))
-        # datajob/dataflow omitted: not needed for the squad's detections.
+        elif kind == "datajob":
+            mcps.extend(_mcps_for_datajob(asset, inputs_of.get(urn, []), outputs_of.get(urn, [])))
 
-    # 3) Lineage.
+    # 3) Dataset->dataset lineage + assertion run events.
     mcps.extend(_lineage_mcps(graph))
+    mcps.extend(_assertion_mcps(graph))
 
     print(f"Emitting {len(mcps)} metadata change proposals...")
     for i, mcp in enumerate(mcps, 1):

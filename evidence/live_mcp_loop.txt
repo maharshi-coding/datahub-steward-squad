@@ -1,8 +1,8 @@
 Starting DataHub MCP loop against a live DataHub...
 Live DataHub MCP: launching 'uvx mcp-server-datahub@latest' against http://localhost:8080
 MCP server tools: search, get_lineage, get_dataset_queries, get_entities, list_schema_fields, get_lineage_paths_between, search_documents, grep_documents, add_tags, remove_tags, add_terms, remove_terms, add_owners, remove_owners, set_domains, remove_domains, update_description, add_structured_properties, remove_structured_properties, save_document
-Reconstructed graph from MCP: 4 assets, 3 lineage edges
-Engine: deterministic | Findings: 2 | Proposals: 2
+Reconstructed graph from MCP: 6 assets, 5 lineage edges
+Engine: deterministic | Findings: 5 | Proposals: 2
 
 Applied writeback via MCP mutation tools:
   MCP-001 add_tags: applied

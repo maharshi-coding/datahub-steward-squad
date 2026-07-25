@@ -39,9 +39,16 @@ python scripts/ingest_fixture_to_datahub.py
 ```
 
 This emits datasets (with schema fields, owners, tags, glossary terms, domains,
-custom properties, and dataset→dataset lineage), plus the `urn:li:tag:PII` tag
-that the PII writeback attaches. Open http://localhost:9002 (login
-`datahub`/`datahub`) to browse the seeded Finance domain.
+custom properties), the `finance_daily.load_revenue` datajob and the
+`Executive Revenue KPI` dashboard with cross-type lineage, data-quality
+assertions with pass/fail run events, and the `urn:li:tag:PII` tag that the PII
+writeback attaches. Open http://localhost:9002 (login `datahub`/`datahub`) to
+browse the seeded Finance domain.
+
+As a result the live loop detects the same risk classes as the offline demo:
+missing owners/descriptions, unclassified PII columns, lineage blast radius
+(naming the datajob and dashboard), and **failing assertions** — the latter read
+from DataHub's dataset `health` signal (no cloud-only assertions tool required).
 
 > Prefer DataHub's own sample data? `datahub docker ingest-sample-data` also
 > works when its bundled file matches your CLI version. The fixture seeder above
