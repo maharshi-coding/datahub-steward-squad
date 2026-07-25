@@ -1,28 +1,31 @@
 # DataHub Steward Squad
 
-![tests](https://img.shields.io/badge/tests-9%20passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-25%20passing-brightgreen)
 ![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green)
-![Dependencies: none](https://img.shields.io/badge/dependencies-stdlib%20only-brightgreen)
+![Offline path: stdlib only](https://img.shields.io/badge/offline%20path-stdlib%20only-brightgreen)
 
 ECC-style multi-agent stewardship for DataHub metadata.
 
-> **30-second judge test:** `python3 -m datahub_steward_squad mcp-demo --apply` runs the whole read → analyze → writeback → verify loop over MCP with zero credentials.
+> **The real thing:** `python3 -m datahub_steward_squad mcp-demo --live --apply` runs the whole read → analyze → writeback → verify loop against a **real DataHub** via the official `mcp-server-datahub`.
+>
+> **Zero-credential fallback:** drop `--live` to run the identical loop against a bundled DataHub-shaped mock — no DataHub, no keys — so the demo never breaks.
 
-DataHub Steward Squad is a runnable hackathon project that turns DataHub context into governed action. A five-agent team searches a DataHub-shaped metadata graph, traces lineage, detects quality and PII risks, drafts steward-facing remediation, and emits approval-gated DataHub MCP writeback proposals. A Chief Steward coordinator — powered by Claude when a key is present — reasons over the grounded findings and writes the executive brief.
+DataHub Steward Squad is a runnable hackathon project that turns DataHub context into governed action. A five-agent team searches DataHub, traces lineage, detects quality and PII risks, drafts steward-facing remediation, and emits approval-gated MCP writeback proposals. A Chief Steward coordinator — powered by Claude when a key is present — reasons over the grounded findings and writes the executive brief.
 
 Two things make it *real*, not a mockup:
 
-- **Genuinely agentic.** With `ANTHROPIC_API_KEY` set, a Claude model does the steward reasoning and prioritization. Without a key it falls back to a deterministic engine, so the project always runs and the demo never breaks.
-- **A real end-to-end MCP loop.** `mcp-demo` spins up a bundled DataHub-shaped MCP server and runs the full **read → analyze → writeback → verify** loop over JSON-RPC — with zero credentials. The PII tag and description updates are actually written through MCP mutation tools and confirmed by re-reading the graph.
+- **A real DataHub MCP loop.** `mcp-demo --live` launches the official `mcp-server-datahub`, reconstructs the graph from real `search` / `get_entities` / `get_lineage` calls, then writes approved fixes back through real `update_description` / `add_tags` / `save_document` mutation tools and re-reads to prove they landed. We inspected the real server's actual interface (recorded under `tests/fixtures/live/`) and built an adapter for its GraphQL-shaped responses — we do **not** reimplement DataHub.
+- **Genuinely agentic.** With `ANTHROPIC_API_KEY` set, a Claude model does the steward reasoning and prioritization. Without a key it falls back to a deterministic engine, so the project always runs.
 
-The default demo runs fully offline from `examples/retail_finance_graph.json`, so judges can test it immediately. The same code path targets a live DataHub MCP Server through `mcp/datahub-mcp.local.json`.
+The same loop runs offline against a bundled mock (`mcp_server.py`) with zero credentials, so judges can test it in seconds — then flip `--live` to point it at real DataHub. See [docs/datahub_mcp_setup.md](docs/datahub_mcp_setup.md) and a recorded live transcript in [evidence/live_mcp_loop.txt](evidence/live_mcp_loop.txt).
 
 ## Why This Can Win
 
+- **Runs against real DataHub:** `mcp-demo --live` uses the official `mcp-server-datahub` — reading real metadata and writing governed changes back — not a reimplementation of DataHub's APIs.
 - **Real agent, not rules-in-a-trenchcoat:** a Claude-powered Chief Steward reasons over grounded findings, with a deterministic fallback so it always runs offline.
-- **Real MCP loop:** `mcp-demo` reads the catalog, writes changes back, and verifies them through the Model Context Protocol — not just a JSON plan on disk.
-- **Meaningful DataHub use:** centered on DataHub URNs, domains, owners, schema fields, assertions, lineage, glossary terms, and context documents.
+- **Real MCP loop:** reads the catalog, writes changes back, and verifies them through the Model Context Protocol — not just a JSON plan on disk.
+- **Meaningful DataHub use:** centered on DataHub URNs, domains, owners, schema fields, lineage, glossary terms, tags, and context documents.
 - **Agent category fit:** an "Agents That Do Real Work" submission that finds governance risks and prepares updates the next steward can inherit.
 - **Submission quality:** runnable code, passing CI, sample outputs, a demo script, Apache 2.0 license, an ECC-inspired team config, and a reusable DataHub Skill candidate.
 - **Bonus path:** `skills/datahub-steward-squad/SKILL.md` is structured as a contribution candidate for the DataHub Skills ecosystem.
@@ -111,31 +114,54 @@ To turn on real Claude reasoning:
 
 `.env` is git-ignored — your key never lands in the repo.
 
-## Live MCP Loop (read → analyze → writeback → verify)
+## Live DataHub MCP Loop (read → analyze → writeback → verify)
 
-`mcp-demo` runs the **entire** stewardship loop over the Model Context Protocol against a bundled DataHub-shaped MCP server (`datahub_steward_squad/mcp_server.py`). No DataHub instance and no credentials are needed.
+`mcp-demo --live` runs the **entire** stewardship loop over MCP against a **real
+DataHub** through the official `mcp-server-datahub`. Full setup (quickstart,
+seeding, token) is in [docs/datahub_mcp_setup.md](docs/datahub_mcp_setup.md); the short version:
 
 ```bash
-# Dry run: read the catalog over MCP, analyze, print the writeback plan
-python3 -m datahub_steward_squad mcp-demo
+pip install --upgrade acryl-datahub
+datahub docker quickstart                       # DataHub on :8080 / UI on :9002
+pip install -e ".[live]"                        # acryl-datahub SDK + uv (uvx)
+python scripts/ingest_fixture_to_datahub.py     # seed the retail/finance fixture
+cp .env.example .env                            # set DATAHUB_GMS_URL (+ token if auth on)
 
-# Apply: approve the proposals, write them back via MCP mutation tools,
-# then re-read the graph to prove the changes landed
-python3 -m datahub_steward_squad mcp-demo --apply
+# Dry run: read REAL metadata over MCP, analyze, print the writeback plan
+python3 -m datahub_steward_squad mcp-demo --live
+
+# Apply: write approved fixes back through real mutation tools, then re-read
+python3 -m datahub_steward_squad mcp-demo --live --apply
 ```
 
-Example verification output — the PII tag is written through MCP and confirmed by re-reading:
+Recorded live verification output ([evidence/live_mcp_loop_full.txt](evidence/live_mcp_loop_full.txt)) — real
+descriptions and column PII tags written through `mcp-server-datahub` and
+confirmed by re-reading:
 
 ```
 Applied writeback via MCP mutation tools:
-  MCP-001 add_tags: applied
-  MCP-002 save_document: applied
-
+  MCP-001 update_description: applied
+  MCP-002 add_tags: applied
+  ...
 Verification (re-read through MCP):
-  ...finance.fct_revenue: customer_email.tags [] -> ['urn:li:tag:PII']
+  ...snowflake,raw.payments,PROD): description '' -> 'raw.payments is a snowflake dataset in the Fi...'
+  ...snowflake,raw.payments,PROD): customer_email.tags [] -> ['PII']
+  ...snowflake,finance.fct_revenue,PROD): customer_email.tags [] -> ['PII']
 ```
 
-Approve a subset with `--approve MCP-001,MCP-003`. The bundled server speaks the same read/mutation tool names as the official DataHub MCP Server, so the live boundary is a config swap (see below). You can also point any MCP host (Claude Desktop, etc.) straight at the mock server with `mcp/datahub-steward-mock.json`.
+### Zero-credential offline fallback
+
+Drop `--live` to run the identical loop against the bundled DataHub-shaped mock
+server (`datahub_steward_squad/mcp_server.py`) — no DataHub, no credentials:
+
+```bash
+python3 -m datahub_steward_squad mcp-demo --apply
+```
+
+Approve a subset with `--approve MCP-001,MCP-003`. The mock speaks the same tool
+*names* as the official server, so the offline demo mirrors the live one. You can
+also point any MCP host (Claude Desktop, etc.) at the mock with
+`mcp/datahub-steward-mock.json`, or at real DataHub with `mcp/datahub-mcp.local.json`.
 
 ## Test
 
@@ -143,17 +169,8 @@ Approve a subset with `--approve MCP-001,MCP-003`. The bundled server speaks the
 python3 -m unittest discover -s tests
 ```
 
-## Live DataHub MCP Setup
-
-The default demo does not need credentials. For a live catalog, configure DataHub MCP with:
-
-```bash
-cp mcp/datahub-mcp.local.json mcp/datahub-mcp.private.json
-```
-
-Then edit `DATAHUB_GMS_URL`, `DATAHUB_GMS_TOKEN`, and keep `TOOLS_IS_MUTATION_ENABLED=true` only when you are ready to review and approve mutation calls.
-
-Official DataHub docs say the MCP server exposes read tools such as `search`, `get_entities`, and `get_lineage`, plus mutation tools including `update_description`, `add_tags`, and `save_document` when mutations are enabled. See `docs/datahub_mcp_setup.md`.
+25 tests, including the live adapter checked against recorded real-server
+responses in `tests/fixtures/live/` — so live parsing is covered without DataHub running.
 
 ## Demo Command
 

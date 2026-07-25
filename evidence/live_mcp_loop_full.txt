@@ -1,0 +1,22 @@
+Starting DataHub MCP loop against a live DataHub...
+Live DataHub MCP: launching 'uvx mcp-server-datahub@latest' against http://localhost:8080
+MCP server tools: search, get_lineage, get_dataset_queries, get_entities, list_schema_fields, get_lineage_paths_between, search_documents, grep_documents, add_tags, remove_tags, add_terms, remove_terms, add_owners, remove_owners, set_domains, remove_domains, update_description, add_structured_properties, remove_structured_properties, save_document
+Reconstructed graph from MCP: 4 assets, 3 lineage edges
+Engine: deterministic | Findings: 9 | Proposals: 6
+
+Applied writeback via MCP mutation tools:
+  MCP-001 update_description: applied
+  MCP-002 add_tags: applied
+  MCP-003 update_description: applied
+  MCP-004 add_tags: applied
+  MCP-005 add_tags: applied
+  MCP-006 save_document: applied
+
+Verification (re-read through MCP):
+  urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD): description '' -> 'finance.dim_customer is a snowflake dataset i...'
+  urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD): phone_number.tags [] -> ['PII']
+  urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.payments,PROD): description '' -> 'raw.payments is a snowflake dataset in the Fi...'
+  urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.payments,PROD): customer_email.tags [] -> ['PII']
+  urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD): customer_email.tags [] -> ['PII']
+
+MCP loop complete.

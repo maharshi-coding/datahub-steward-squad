@@ -36,22 +36,24 @@ Call out:
 - Sensitive customer email is missing a PII classification.
 - The generated SQL provides guardrail examples.
 
-## 2:00-2:45 - Live MCP writeback (the money shot)
+## 2:00-2:45 - Live DataHub MCP writeback (the money shot)
 
-"Now the real thing — the whole loop over the Model Context Protocol, no DataHub credentials needed."
+"Now the real thing — the whole loop against a **live DataHub**, through the official `mcp-server-datahub`."
 
 ```bash
-python3 -m datahub_steward_squad mcp-demo --apply
+python3 -m datahub_steward_squad mcp-demo --live --apply
 ```
 
 Narrate the output live:
 
-- It lists the MCP server's tools (`search`, `get_entities`, `get_lineage`, plus mutation tools).
-- It reconstructs the graph **from MCP reads**.
-- It applies `add_tags` / `save_document` through **MCP mutation tools**.
-- It re-reads and shows the verified diff: `customer_email.tags [] -> ['urn:li:tag:PII']`.
+- It launches `uvx mcp-server-datahub@latest` and lists the **real** server's tools (`search`, `get_entities`, `get_lineage`, plus mutation tools).
+- It reconstructs the graph **from real DataHub reads** ("4 assets, 3 lineage edges").
+- It applies `update_description` / `add_tags` / `save_document` through **real MCP mutation tools**.
+- It re-reads and shows verified diffs, e.g. `customer_email.tags [] -> ['PII']` and a drafted description landing on `raw.payments`.
 
-"Every mutation was approval-gated — I chose to apply them. In a live tenant this is the same code pointed at `mcp-server-datahub`."
+Then flip to the DataHub UI (http://localhost:9002) and show the PII tag on the column and the "Steward Squad Risk Brief" document — written by the agent, now living in DataHub.
+
+"Every mutation was approval-gated. And if you have no DataHub handy, drop `--live` — the identical loop runs against a bundled mock with zero credentials, so the demo never breaks."
 
 ## 2:45-3:00 - Why It Matters
 

@@ -21,6 +21,14 @@ classifiers = [
 ]
 dependencies = []
 
+# The offline path (mock MCP loop + deterministic engine + Claude via urllib) is
+# stdlib-only. The live path talks to a REAL DataHub through the official
+# mcp-server-datahub, launched with uvx; acryl-datahub powers the seeding helper
+# (scripts/ingest_fixture_to_datahub.py). Install with:
+#   pip install -e ".[live]"     # then: uvx mcp-server-datahub@latest
+[project.optional-dependencies]
+live = ["acryl-datahub>=1.4.0", "uv>=0.4"]
+
 [project.scripts]
 datahub-steward-squad = "datahub_steward_squad.cli:main"
 
