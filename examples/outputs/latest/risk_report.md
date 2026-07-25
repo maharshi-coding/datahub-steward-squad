@@ -4,13 +4,13 @@ Objective: Detect DataHub metadata risks in a Finance data product, reason over 
 Query: `revenue`
 Focus domain: `Finance`
 Reasoning engine: `Claude` (claude-sonnet-5)
-Started at: `2026-07-25T06:04:31.081291+00:00`
+Started at: `2026-07-25T10:20:12.735492+00:00`
 
 ## Chief Steward Brief
 
-> finance.fct_revenue is a certified, high-usage revenue table with a failing data-quality assertion and unclassified PII, and its blast radius extends through two other critical assets.
+> finance.fct_revenue is failing a critical data quality check and feeding certified, high-usage downstream assets, requiring immediate remediation and PII tagging before any further changes ship.
 
-A failing SQL assertion on finance.fct_revenue (18 negative-revenue rows expected to be 0) threatens a certified, high-usage (423/30d) asset that feeds Executive Revenue KPI, mart_revenue_by_region, and the churn_risk_model. The same table exposes an untagged customer_email column that matches PII heuristics, and both the upstream loader job and the downstream mart carry similar downstream blast-radius risk. Immediate remediation of the assertion and PII tagging is warranted before any schema or freshness changes ship downstream.
+A certified, high-usage asset (finance.fct_revenue, 423 30-day queries) is failing a negative-revenue SQL assertion with 18 bad rows, and it fans out to three critical downstream consumers including an executive KPI and a churn model. The same asset has an untagged customer_email column that heuristically matches sensitive PII. Upstream, the finance_daily.load_revenue job and analytics.mart_revenue_by_region both carry production blast radius into the same critical downstream chain, so any schema or freshness change should be gated on quality and governance review first. Two MCP writeback proposals (PII tagging and a saved risk brief) are ready for approval-gated execution.
 
 ## Scorecard
 
@@ -54,7 +54,7 @@ A failing SQL assertion on finance.fct_revenue (18 negative-revenue rows expecte
 - Evidence:
   - Upstream dependencies: 3
   - Downstream dependencies: 3
-  - Critical downstream assets: analytics.mart_revenue_by_region, Executive Revenue KPI, churn_risk_model
+  - Critical downstream assets: churn_risk_model, analytics.mart_revenue_by_region, Executive Revenue KPI
 
 ### LIN-003 - HIGH - finance_daily.load_revenue has downstream production blast radius
 
@@ -67,7 +67,7 @@ A failing SQL assertion on finance.fct_revenue (18 negative-revenue rows expecte
 - Evidence:
   - Upstream dependencies: 1
   - Downstream dependencies: 4
-  - Critical downstream assets: analytics.mart_revenue_by_region, Executive Revenue KPI, finance.fct_revenue, churn_risk_model
+  - Critical downstream assets: finance.fct_revenue, analytics.mart_revenue_by_region, churn_risk_model, Executive Revenue KPI
 
 ### PII-005 - HIGH - finance.fct_revenue.customer_email appears sensitive but is not tagged
 

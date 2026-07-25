@@ -28,7 +28,7 @@
       "evidence": [
         "Upstream dependencies: 3",
         "Downstream dependencies: 3",
-        "Critical downstream assets: analytics.mart_revenue_by_region, Executive Revenue KPI, churn_risk_model"
+        "Critical downstream assets: churn_risk_model, analytics.mart_revenue_by_region, Executive Revenue KPI"
       ],
       "id": "LIN-001",
       "recommendation": "Review quality and governance before schema or freshness changes are shipped.",
@@ -47,7 +47,7 @@
       "evidence": [
         "Upstream dependencies: 1",
         "Downstream dependencies: 4",
-        "Critical downstream assets: analytics.mart_revenue_by_region, Executive Revenue KPI, finance.fct_revenue, churn_risk_model"
+        "Critical downstream assets: finance.fct_revenue, analytics.mart_revenue_by_region, churn_risk_model, Executive Revenue KPI"
       ],
       "id": "LIN-003",
       "recommendation": "Review quality and governance before schema or freshness changes are shipped.",
@@ -114,9 +114,9 @@
   },
   "narrative": {
     "engine": "llm",
-    "executive_summary": "A failing SQL assertion on finance.fct_revenue (18 negative-revenue rows expected to be 0) threatens a certified, high-usage (423/30d) asset that feeds Executive Revenue KPI, mart_revenue_by_region, and the churn_risk_model. The same table exposes an untagged customer_email column that matches PII heuristics, and both the upstream loader job and the downstream mart carry similar downstream blast-radius risk. Immediate remediation of the assertion and PII tagging is warranted before any schema or freshness changes ship downstream.",
+    "executive_summary": "A certified, high-usage asset (finance.fct_revenue, 423 30-day queries) is failing a negative-revenue SQL assertion with 18 bad rows, and it fans out to three critical downstream consumers including an executive KPI and a churn model. The same asset has an untagged customer_email column that heuristically matches sensitive PII. Upstream, the finance_daily.load_revenue job and analytics.mart_revenue_by_region both carry production blast radius into the same critical downstream chain, so any schema or freshness change should be gated on quality and governance review first. Two MCP writeback proposals (PII tagging and a saved risk brief) are ready for approval-gated execution.",
     "generated_by": "claude-sonnet-5",
-    "headline": "finance.fct_revenue is a certified, high-usage revenue table with a failing data-quality assertion and unclassified PII, and its blast radius extends through two other critical assets.",
+    "headline": "finance.fct_revenue is failing a critical data quality check and feeding certified, high-usage downstream assets, requiring immediate remediation and PII tagging before any further changes ship.",
     "prioritized_actions": [
       {
         "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
@@ -124,30 +124,29 @@
           "QLT-004"
         ],
         "rank": 1,
-        "title": "Investigate and remediate failing revenue assertion",
+        "title": "Open incident for failing revenue assertion",
         "urgency": "now",
-        "why": "A certified, high-usage table (423/30d) is producing 18 rows of negative revenue against an expected 0, risking downstream financial reporting and model accuracy."
-      },
-      {
-        "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
-        "finding_ids": [
-          "LIN-001",
-          "QLT-004"
-        ],
-        "rank": 2,
-        "title": "Freeze schema/freshness changes on finance.fct_revenue pending quality review",
-        "urgency": "now",
-        "why": "This certified, high-usage asset has three critical downstream dependents (analytics.mart_revenue_by_region, Executive Revenue KPI, churn_risk_model) that would propagate any unresolved quality issue."
+        "why": "A certified, high-usage table is producing 18 rows of negative revenue, risking incorrect figures in an executive KPI and churn model."
       },
       {
         "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
         "finding_ids": [
           "PII-005"
         ],
+        "rank": 2,
+        "title": "Tag customer_email as PII",
+        "urgency": "now",
+        "why": "An unclassified sensitive-looking column on a certified, high-usage table exposes compliance risk."
+      },
+      {
+        "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+        "finding_ids": [
+          "LIN-001"
+        ],
         "rank": 3,
-        "title": "Approve PII tagging for customer_email column",
+        "title": "Gate changes to fct_revenue on quality/governance review",
         "urgency": "soon",
-        "why": "An untagged column matching sensitive-data heuristics on a certified, high-usage table creates compliance exposure until classified."
+        "why": "Three critical downstream assets (churn_risk_model, mart_revenue_by_region, Executive Revenue KPI) depend on this table, so unreviewed changes could cascade failures."
       },
       {
         "asset_urn": "urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)",
@@ -155,9 +154,9 @@
           "LIN-003"
         ],
         "rank": 4,
-        "title": "Review governance on finance_daily.load_revenue upstream job",
+        "title": "Review load_revenue pipeline before schema/freshness changes",
         "urgency": "soon",
-        "why": "This uncertified loader job feeds finance.fct_revenue and three other critical downstream assets, making it a high-leverage but less-governed control point."
+        "why": "This uncertified but low-usage job feeds the same critical downstream chain as fct_revenue, amplifying upstream risk."
       },
       {
         "asset_urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
@@ -165,12 +164,12 @@
           "LIN-002"
         ],
         "rank": 5,
-        "title": "Monitor mart_revenue_by_region for downstream KPI impact",
+        "title": "Monitor mart_revenue_by_region for downstream impact",
         "urgency": "monitor",
-        "why": "This certified, moderately-used mart directly feeds the Executive Revenue KPI, so upstream issues could surface in executive reporting."
+        "why": "This certified, high-usage mart feeds the Executive Revenue KPI and should be watched given upstream quality issues."
       }
     ],
-    "reviewer_note": "Before approving MCP-001 and MCP-002, confirm the customer_email column truly contains PII (not a false-positive naming match) and verify the assertion incident note captures the correct owner and remediation timeline."
+    "reviewer_note": "Before approving the PII tag and risk-brief MCP writebacks, confirm the customer_email column truly contains sensitive data and that the incident/remediation plan for the failing assertion is referenced accurately in the saved brief."
   },
   "objective": "Detect DataHub metadata risks in a Finance data product, reason over lineage and quality, and prepare governed MCP writeback proposals.",
   "proposals": [
@@ -216,7 +215,7 @@
     "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
     "urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)"
   ],
-  "started_at": "2026-07-25T06:04:31.081291+00:00",
+  "started_at": "2026-07-25T10:20:12.735492+00:00",
   "steward_document": "# Steward Squad Risk Brief\n\nObjective: Detect DataHub metadata risks in a Finance data product, reason over lineage and quality, and prepare governed MCP writeback proposals.\nFocus domain: Finance\nAssets inspected: 4\n\n## Top Findings\n\n### HIGH: finance.fct_revenue has downstream production blast radius\n- URN: `urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)`\n- Asset: finance.fct_revenue\n- Score: 30\n- Recommendation: Review quality and governance before schema or freshness changes are shipped.\n\n### HIGH: finance_daily.load_revenue has downstream production blast radius\n- URN: `urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)`\n- Asset: finance_daily.load_revenue\n- Score: 30\n- Recommendation: Review quality and governance before schema or freshness changes are shipped.\n\n### CRITICAL: finance.fct_revenue has failing sql assertion\n- URN: `urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)`\n- Asset: finance.fct_revenue\n- Score: 30\n- Recommendation: Create an incident note, notify the owner, and attach a remediation plan.\n\n### HIGH: finance.fct_revenue.customer_email appears sensitive but is not tagged\n- URN: `urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)`\n- Asset: finance.fct_revenue\n- Score: 24\n- Recommendation: Propose a PII tag or glossary term on the schema field.\n\n### HIGH: analytics.mart_revenue_by_region has downstream production blast radius\n- URN: `urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)`\n- Asset: analytics.mart_revenue_by_region\n- Score: 22\n- Recommendation: Review quality and governance before schema or freshness changes are shipped.\n\n## Proposed Writeback\nEvery mutation is approval-gated. Review the generated MCP plan before applying changes.",
   "team_cards": [
     {

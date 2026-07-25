@@ -118,8 +118,8 @@
       <span class="badge det"><span class="dot"></span>Every mutation approval-gated</span>
     </div>
     <h1>DataHub Steward Squad</h1>
-    <p class="headline">finance.fct_revenue is a certified, high-usage revenue table with a failing data-quality assertion and unclassified PII, and its blast radius extends through two other critical assets.</p>
-    <p class="lede">A failing SQL assertion on finance.fct_revenue (18 negative-revenue rows expected to be 0) threatens a certified, high-usage (423/30d) asset that feeds Executive Revenue KPI, mart_revenue_by_region, and the churn_risk_model. The same table exposes an untagged customer_email column that matches PII heuristics, and both the upstream loader job and the downstream mart carry similar downstream blast-radius risk. Immediate remediation of the assertion and PII tagging is warranted before any schema or freshness changes ship downstream.</p>
+    <p class="headline">finance.fct_revenue is failing a critical data quality check and feeding certified, high-usage downstream assets, requiring immediate remediation and PII tagging before any further changes ship.</p>
+    <p class="lede">A certified, high-usage asset (finance.fct_revenue, 423 30-day queries) is failing a negative-revenue SQL assertion with 18 bad rows, and it fans out to three critical downstream consumers including an executive KPI and a churn model. The same asset has an untagged customer_email column that heuristically matches sensitive PII. Upstream, the finance_daily.load_revenue job and analytics.mart_revenue_by_region both carry production blast radius into the same critical downstream chain, so any schema or freshness change should be gated on quality and governance review first. Two MCP writeback proposals (PII tagging and a saved risk brief) are ready for approval-gated execution.</p>
   </header>
   <main>
     <section class="grid" aria-label="Severity summary">
@@ -135,10 +135,10 @@
           <span class="rank">1</span>
           <div>
             <div class="action-head">
-              <strong>Investigate and remediate failing revenue assertion</strong>
+              <strong>Open incident for failing revenue assertion</strong>
               <span class="pill urg-now">NOW</span>
             </div>
-            <p>A certified, high-usage table (423/30d) is producing 18 rows of negative revenue against an expected 0, risking downstream financial reporting and model accuracy.</p>
+            <p>A certified, high-usage table is producing 18 rows of negative revenue, risking incorrect figures in an executive KPI and churn model.</p>
             <code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code>
           </div>
         </li>
@@ -148,10 +148,10 @@
           <span class="rank">2</span>
           <div>
             <div class="action-head">
-              <strong>Freeze schema/freshness changes on finance.fct_revenue pending quality review</strong>
+              <strong>Tag customer_email as PII</strong>
               <span class="pill urg-now">NOW</span>
             </div>
-            <p>This certified, high-usage asset has three critical downstream dependents (analytics.mart_revenue_by_region, Executive Revenue KPI, churn_risk_model) that would propagate any unresolved quality issue.</p>
+            <p>An unclassified sensitive-looking column on a certified, high-usage table exposes compliance risk.</p>
             <code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code>
           </div>
         </li>
@@ -161,10 +161,10 @@
           <span class="rank">3</span>
           <div>
             <div class="action-head">
-              <strong>Approve PII tagging for customer_email column</strong>
+              <strong>Gate changes to fct_revenue on quality/governance review</strong>
               <span class="pill urg-soon">SOON</span>
             </div>
-            <p>An untagged column matching sensitive-data heuristics on a certified, high-usage table creates compliance exposure until classified.</p>
+            <p>Three critical downstream assets (churn_risk_model, mart_revenue_by_region, Executive Revenue KPI) depend on this table, so unreviewed changes could cascade failures.</p>
             <code>urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)</code>
           </div>
         </li>
@@ -174,10 +174,10 @@
           <span class="rank">4</span>
           <div>
             <div class="action-head">
-              <strong>Review governance on finance_daily.load_revenue upstream job</strong>
+              <strong>Review load_revenue pipeline before schema/freshness changes</strong>
               <span class="pill urg-soon">SOON</span>
             </div>
-            <p>This uncertified loader job feeds finance.fct_revenue and three other critical downstream assets, making it a high-leverage but less-governed control point.</p>
+            <p>This uncertified but low-usage job feeds the same critical downstream chain as fct_revenue, amplifying upstream risk.</p>
             <code>urn:li:dataJob:(urn:li:dataFlow:(airflow,finance_daily,PROD),load_revenue)</code>
           </div>
         </li>
@@ -187,15 +187,15 @@
           <span class="rank">5</span>
           <div>
             <div class="action-head">
-              <strong>Monitor mart_revenue_by_region for downstream KPI impact</strong>
+              <strong>Monitor mart_revenue_by_region for downstream impact</strong>
               <span class="pill urg-monitor">MONITOR</span>
             </div>
-            <p>This certified, moderately-used mart directly feeds the Executive Revenue KPI, so upstream issues could surface in executive reporting.</p>
+            <p>This certified, high-usage mart feeds the Executive Revenue KPI and should be watched given upstream quality issues.</p>
             <code>urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)</code>
           </div>
         </li>
         </ul>
-      <div class="reviewer">Reviewer note: Before approving MCP-001 and MCP-002, confirm the customer_email column truly contains PII (not a false-positive naming match) and verify the assertion incident note captures the correct owner and remediation timeline.</div>
+      <div class="reviewer">Reviewer note: Before approving the PII tag and risk-brief MCP writebacks, confirm the customer_email column truly contains sensitive data and that the incident/remediation plan for the failing assertion is referenced accurately in the saved brief.</div>
     </section>
     <section class="panel">
       <h2>Top Findings</h2>
@@ -301,6 +301,6 @@
 <li><code>finance_daily.load_revenue</code><span>airflow</span></li></ul>
     </section>
   </main>
-  <footer>Generated by DataHub Steward Squad · 2026-07-25T06:04:31.081291+00:00 · Objective: Detect DataHub metadata risks in a Finance data product, reason over lineage and quality, and prepare governed MCP writeback proposals.</footer>
+  <footer>Generated by DataHub Steward Squad · 2026-07-25T10:20:12.735492+00:00 · Objective: Detect DataHub metadata risks in a Finance data product, reason over lineage and quality, and prepare governed MCP writeback proposals.</footer>
 </body>
 </html>
