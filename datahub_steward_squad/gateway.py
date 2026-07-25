@@ -50,7 +50,7 @@ class DataHubMCPGateway:
                 results.append({"id": proposal.id, "tool": proposal.tool, "status": "skipped"})
                 continue
             try:
-                result = self.client.call_tool(proposal.tool, proposal.arguments)
+                result = self._apply_one(proposal)
                 results.append(
                     {"id": proposal.id, "tool": proposal.tool, "status": "applied", "result": result}
                 )
@@ -59,6 +59,14 @@ class DataHubMCPGateway:
                     {"id": proposal.id, "tool": proposal.tool, "status": "error", "error": str(error)}
                 )
         return results
+
+    def _apply_one(self, proposal: Proposal) -> Any:
+        """Execute a single proposal via its MCP tool.
+
+        The mock speaks the squad's proposal tool names/args directly. The live
+        gateway overrides this to translate onto the real server's signatures.
+        """
+        return self.client.call_tool(proposal.tool, proposal.arguments)
 
     def read_asset(self, urn: str) -> dict[str, Any] | None:
         entities = self.client.call_tool("get_entities", {"urns": [urn]}) or []

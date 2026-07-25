@@ -9,6 +9,7 @@ server the same way.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from typing import Any
@@ -22,11 +23,24 @@ class MCPError(RuntimeError):
 
 
 class MCPStdioClient:
-    """Speaks MCP JSON-RPC to a server subprocess over stdin/stdout."""
+    """Speaks MCP JSON-RPC to a server subprocess over stdin/stdout.
 
-    def __init__(self, command: list[str], cwd: str | None = None) -> None:
+    ``env`` overrides/extends the child process environment (merged over the
+    current ``os.environ``). This is how the live gateway passes
+    ``DATAHUB_GMS_URL`` / ``DATAHUB_GMS_TOKEN`` / ``TOOLS_IS_MUTATION_ENABLED``
+    to the real ``uvx mcp-server-datahub`` process. The mock path leaves it
+    ``None`` and inherits the parent environment unchanged.
+    """
+
+    def __init__(
+        self,
+        command: list[str],
+        cwd: str | None = None,
+        env: dict[str, str] | None = None,
+    ) -> None:
         self.command = command
         self.cwd = cwd
+        self.env = env
         self._process: subprocess.Popen | None = None
         self._next_id = 0
 
@@ -39,14 +53,20 @@ class MCPStdioClient:
         self.close()
 
     def start(self) -> dict[str, Any]:
+        child_env = None
+        if self.env is not None:
+            child_env = {**os.environ, **self.env}
         self._process = subprocess.Popen(
             self.command,
             stdin=subprocess.PIPE,
             stdout=subprocess.PIPE,
             stderr=sys.stderr,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             bufsize=1,
             cwd=self.cwd,
+            env=child_env,
         )
         init = self._request(
             "initialize",

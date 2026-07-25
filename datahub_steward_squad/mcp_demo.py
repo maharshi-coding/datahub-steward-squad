@@ -36,14 +36,35 @@ def run_mcp_demo(
     approved_ids: set[str] | None = None,
     out: str | None = None,
     cwd: str | None = None,
+    live: bool = False,
     log=print,
 ) -> dict[str, Any]:
-    command = server_command(fixture, enable_mutations=apply)
-    with MCPStdioClient(command, cwd=cwd) as client:
+    if live:
+        # Real path: launch the official mcp-server-datahub against a live GMS.
+        from .live import (
+            LiveDataHubMCPGateway,
+            live_server_command,
+            live_server_env,
+            load_dotenv,
+        )
+
+        load_dotenv()
+        command = live_server_command()
+        env = live_server_env(enable_mutations=apply)
+        log(f"Live DataHub MCP: launching '{' '.join(command)}' against {env['DATAHUB_GMS_URL']}")
+        client_kwargs = {"env": env}
+        gateway_cls = LiveDataHubMCPGateway
+    else:
+        # Offline path: bundled DataHub-shaped mock server, zero credentials.
+        command = server_command(fixture, enable_mutations=apply)
+        client_kwargs = {"cwd": cwd}
+        gateway_cls = DataHubMCPGateway
+
+    with MCPStdioClient(command, **client_kwargs) as client:
         tools = [tool["name"] for tool in client.list_tools()]
         log(f"MCP server tools: {', '.join(tools)}")
 
-        gateway = DataHubMCPGateway(client)
+        gateway = gateway_cls(client)
         graph = gateway.build_graph(query="", domain="")
         log(f"Reconstructed graph from MCP: {len(graph.assets)} assets, {len(graph.lineage)} lineage edges")
 
@@ -136,4 +157,4 @@ def _verify(gateway: DataHubMCPGateway, run, before: dict[str, dict[str, Any]]) 
 
 def _short(text: str, limit: int = 48) -> str:
     text = text or ""
-    return text if len(text) <= limit else text[: limit - 1] + "…"
+    return text if len(text) <= limit else text[: limit - 3] + "..."

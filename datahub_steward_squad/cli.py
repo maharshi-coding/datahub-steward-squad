@@ -68,7 +68,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     mcp = subcommands.add_parser(
         "mcp-demo",
-        help="Run the full DataHub MCP loop (read -> analyze -> writeback -> verify) against the bundled mock server.",
+        help="Run the full DataHub MCP loop (read -> analyze -> writeback -> verify). "
+        "Use --live against a real DataHub; default is the bundled offline mock.",
     )
     mcp.add_argument("--fixture", default="examples/retail_finance_graph.json")
     mcp.add_argument("--out", default="examples/outputs/latest", help="Output directory for artifacts.")
@@ -76,6 +77,13 @@ def build_parser() -> argparse.ArgumentParser:
     mcp.add_argument("--focus-domain", default="Finance")
     mcp.add_argument("--engine", default="auto", choices=["auto", "llm", "deterministic"])
     mcp.add_argument("--model", default=None)
+    mcp.add_argument(
+        "--live",
+        action="store_true",
+        help="Run against a REAL DataHub via the official 'uvx mcp-server-datahub'. "
+        "Reads DATAHUB_GMS_URL / DATAHUB_GMS_TOKEN / TOOLS_IS_MUTATION_ENABLED from env or .env. "
+        "Without --live, uses the zero-credential bundled mock server.",
+    )
     mcp.add_argument(
         "--apply",
         action="store_true",
@@ -100,7 +108,8 @@ def main(argv: list[str] | None = None) -> int:
         approved_ids = None
         if args.approve:
             approved_ids = {item.strip() for item in args.approve.split(",") if item.strip()}
-        print("Starting DataHub MCP loop against the bundled mock server...")
+        target = "a live DataHub" if args.live else "the bundled offline mock server"
+        print(f"Starting DataHub MCP loop against {target}...")
         try:
             result = run_mcp_demo(
                 fixture=args.fixture,
@@ -111,9 +120,21 @@ def main(argv: list[str] | None = None) -> int:
                 apply=args.apply,
                 approved_ids=approved_ids,
                 out=args.out,
+                live=args.live,
             )
         except LLMUnavailable as error:
             return _llm_unavailable(error)
+        except Exception as error:  # live-mode config/connection errors: no traceback
+            if args.live:
+                print(f"\nLive DataHub MCP loop failed: {error}", file=sys.stderr)
+                print(
+                    "Check that DataHub is running (datahub docker quickstart), that "
+                    "DATAHUB_GMS_URL is set (see .env.example), and that 'uvx' is installed.\n"
+                    "The offline demo always works: python -m datahub_steward_squad mcp-demo --apply",
+                    file=sys.stderr,
+                )
+                return 1
+            raise
         print("")
         print("MCP loop complete.")
         if not args.apply:
