@@ -1,0 +1,43 @@
+{
+  "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+  "fields": [
+    {
+      "fieldPath": "customer_id",
+      "nativeDataType": "varchar",
+      "description": "Customer identifier.",
+      "nullable": false,
+      "glossaryTerms": [
+        "Customer"
+      ]
+    },
+    {
+      "fieldPath": "order_id",
+      "nativeDataType": "varchar",
+      "description": "Order identifier.",
+      "nullable": false
+    },
+    {
+      "fieldPath": "net_revenue_usd",
+      "nativeDataType": "number",
+      "nullable": false,
+      "glossaryTerms": [
+        "Revenue"
+      ]
+    },
+    {
+      "fieldPath": "_loaded_at",
+      "nativeDataType": "timestamp",
+      "nullable": false
+    },
+    {
+      "fieldPath": "customer_email",
+      "nativeDataType": "varchar",
+      "nullable": false
+    }
+  ],
+  "totalFields": 5,
+  "returned": 5,
+  "remainingCount": 0,
+  "matchingCount": null,
+  "offset": 0
+}

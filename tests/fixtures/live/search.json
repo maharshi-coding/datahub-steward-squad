@@ -1,0 +1,185 @@
+{
+  "start": 0,
+  "count": 10,
+  "total": 4,
+  "searchResults": [
+    {
+      "entity": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
+        "properties": {
+          "name": "analytics.mart_revenue_by_region"
+        }
+      }
+    },
+    {
+      "entity": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+        "properties": {
+          "name": "finance.fct_revenue"
+        }
+      }
+    },
+    {
+      "entity": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD)",
+        "properties": {
+          "name": "finance.dim_customer"
+        }
+      }
+    },
+    {
+      "entity": {
+        "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.payments,PROD)",
+        "properties": {
+          "name": "raw.payments"
+        }
+      }
+    }
+  ],
+  "facets": [
+    {
+      "field": "_entityType\u241etypeNames",
+      "displayName": "Type\u241eSub Type",
+      "aggregations": [
+        {
+          "value": "DATASET",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "field": "_entityType",
+      "displayName": "Type",
+      "aggregations": [
+        {
+          "value": "DATASET",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "field": "origin",
+      "displayName": "Environment",
+      "aggregations": [
+        {
+          "value": "PROD",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "field": "domains",
+      "displayName": "Domain",
+      "aggregations": [
+        {
+          "value": "urn:li:domain:Finance",
+          "count": 4
+        }
+      ]
+    },
+    {
+      "field": "owners",
+      "displayName": "Owned By",
+      "aggregations": [
+        {
+          "value": "urn:li:corpGroup:finance-analytics",
+          "count": 1
+        },
+        {
+          "value": "urn:li:corpGroup:analytics-engineering",
+          "count": 1
+        },
+        {
+          "value": "urn:li:corpGroup:customer-data",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "field": "platform",
+      "displayName": "Platform",
+      "aggregations": [
+        {
+          "value": "urn:li:dataPlatform:snowflake",
+          "count": 3
+        },
+        {
+          "value": "urn:li:dataPlatform:dbt",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "field": "tags",
+      "displayName": "Tagged With",
+      "aggregations": [
+        {
+          "value": "urn:li:tag:tier_1",
+          "count": 2
+        },
+        {
+          "value": "urn:li:tag:certified",
+          "count": 2
+        },
+        {
+          "value": "urn:li:tag:raw",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "field": "glossaryTerms",
+      "displayName": "Glossary Term",
+      "aggregations": [
+        {
+          "value": "urn:li:glossaryTerm:Revenue",
+          "count": 2,
+          "entity": {
+            "properties": {
+              "name": "Revenue"
+            }
+          }
+        },
+        {
+          "value": "urn:li:glossaryTerm:Customer",
+          "count": 1,
+          "entity": {
+            "properties": {
+              "name": "Customer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "field": "_index",
+      "displayName": "_index",
+      "aggregations": [
+        {
+          "value": "datasetindex_v2",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "field": "removed",
+      "displayName": "removed",
+      "aggregations": [
+        {
+          "value": "true",
+          "count": 0
+        }
+      ]
+    },
+    {
+      "field": "entity",
+      "displayName": "Type",
+      "aggregations": [
+        {
+          "value": "DATASET",
+          "count": 4
+        }
+      ]
+    }
+  ]
+}

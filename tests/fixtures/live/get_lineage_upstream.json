@@ -1,0 +1,337 @@
+{
+  "upstreams": {
+    "total": 2,
+    "facets": [
+      {
+        "field": "degree",
+        "displayName": "Degree of Dependencies",
+        "aggregations": [
+          {
+            "value": "1",
+            "count": 0
+          },
+          {
+            "value": "2",
+            "count": 0
+          },
+          {
+            "value": "3+",
+            "count": 0
+          }
+        ]
+      },
+      {
+        "field": "_entityType",
+        "displayName": "Type",
+        "aggregations": [
+          {
+            "value": "DATASET",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "field": "platform",
+        "displayName": "Platform",
+        "aggregations": [
+          {
+            "value": "urn:li:dataPlatform:snowflake",
+            "count": 2,
+            "entity": {
+              "urn": "urn:li:dataPlatform:snowflake"
+            }
+          }
+        ]
+      },
+      {
+        "field": "domains",
+        "displayName": "Domain",
+        "aggregations": [
+          {
+            "value": "urn:li:domain:Finance",
+            "count": 2,
+            "entity": {
+              "urn": "urn:li:domain:Finance"
+            }
+          }
+        ]
+      },
+      {
+        "field": "tags",
+        "displayName": "Tagged With",
+        "aggregations": [
+          {
+            "value": "urn:li:tag:raw",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:tag:raw"
+            }
+          },
+          {
+            "value": "urn:li:tag:tier_1",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:tag:tier_1"
+            }
+          }
+        ]
+      },
+      {
+        "field": "glossaryTerms",
+        "displayName": "Glossary Term",
+        "aggregations": [
+          {
+            "value": "urn:li:glossaryTerm:Customer",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:glossaryTerm:Customer"
+            }
+          }
+        ]
+      },
+      {
+        "field": "owners",
+        "displayName": "Owned By",
+        "aggregations": [
+          {
+            "value": "urn:li:corpGroup:customer-data",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:corpGroup:customer-data"
+            }
+          }
+        ]
+      },
+      {
+        "field": "origin",
+        "displayName": "Environment",
+        "aggregations": [
+          {
+            "value": "PROD",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "field": "_entityType\u241etypeNames",
+        "displayName": "Type\u241eSub Type",
+        "aggregations": [
+          {
+            "value": "DATASET",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "field": "removed",
+        "displayName": "removed",
+        "aggregations": [
+          {
+            "value": "true",
+            "count": 0
+          }
+        ]
+      },
+      {
+        "field": "entity",
+        "displayName": "Type",
+        "aggregations": [
+          {
+            "value": "DATASET",
+            "count": 2
+          }
+        ]
+      }
+    ],
+    "searchResults": [
+      {
+        "entity": {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.dim_customer,PROD)",
+          "type": "DATASET",
+          "name": "finance.dim_customer",
+          "platform": {
+            "urn": "urn:li:dataPlatform:snowflake",
+            "name": "snowflake"
+          },
+          "properties": {
+            "name": "finance.dim_customer",
+            "description": "",
+            "customProperties": [
+              {
+                "key": "usage_30d",
+                "value": "311"
+              },
+              {
+                "key": "certified",
+                "value": "true"
+              },
+              {
+                "key": "env",
+                "value": "PROD"
+              },
+              {
+                "key": "table",
+                "value": "finance.dim_customer"
+              },
+              {
+                "key": "domain",
+                "value": "Finance"
+              }
+            ]
+          },
+          "ownership": {
+            "owners": [
+              {
+                "owner": {
+                  "urn": "urn:li:corpGroup:customer-data",
+                  "name": "customer-data"
+                },
+                "type": "DATAOWNER",
+                "ownershipType": {
+                  "urn": "urn:li:ownershipType:__system__dataowner",
+                  "type": "CUSTOM_OWNERSHIP_TYPE"
+                }
+              }
+            ]
+          },
+          "tags": {
+            "tags": [
+              {
+                "tag": {
+                  "urn": "urn:li:tag:tier_1",
+                  "properties": {
+                    "name": "tier_1"
+                  }
+                }
+              }
+            ]
+          },
+          "glossaryTerms": {
+            "terms": [
+              {
+                "term": {
+                  "urn": "urn:li:glossaryTerm:Customer",
+                  "hierarchicalName": "Customer",
+                  "properties": {
+                    "name": "Customer",
+                    "description": "A person or account that has purchased or engaged with the company.",
+                    "termSource": "INTERNAL"
+                  },
+                  "parentNodes": {
+                    "count": 0
+                  }
+                }
+              }
+            ]
+          },
+          "domain": {
+            "domain": {
+              "urn": "urn:li:domain:Finance",
+              "properties": {
+                "name": "Finance"
+              },
+              "parentDomains": {
+                "count": 0
+              },
+              "entities": {
+                "total": 5
+              },
+              "dataProducts": {
+                "total": 0
+              },
+              "children": {
+                "total": 0
+              }
+            }
+          },
+          "health": [
+            {
+              "type": "INCIDENTS",
+              "status": "PASS"
+            }
+          ]
+        },
+        "degree": 1
+      },
+      {
+        "entity": {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,raw.payments,PROD)",
+          "type": "DATASET",
+          "name": "raw.payments",
+          "platform": {
+            "urn": "urn:li:dataPlatform:snowflake",
+            "name": "snowflake"
+          },
+          "properties": {
+            "name": "raw.payments",
+            "description": "",
+            "customProperties": [
+              {
+                "key": "usage_30d",
+                "value": "86"
+              },
+              {
+                "key": "certified",
+                "value": "false"
+              },
+              {
+                "key": "env",
+                "value": "PROD"
+              },
+              {
+                "key": "table",
+                "value": "raw.payments"
+              },
+              {
+                "key": "domain",
+                "value": "Finance"
+              }
+            ]
+          },
+          "tags": {
+            "tags": [
+              {
+                "tag": {
+                  "urn": "urn:li:tag:raw",
+                  "properties": {
+                    "name": "raw"
+                  }
+                }
+              }
+            ]
+          },
+          "domain": {
+            "domain": {
+              "urn": "urn:li:domain:Finance",
+              "properties": {
+                "name": "Finance"
+              },
+              "parentDomains": {
+                "count": 0
+              },
+              "entities": {
+                "total": 5
+              },
+              "dataProducts": {
+                "total": 0
+              },
+              "children": {
+                "total": 0
+              }
+            }
+          },
+          "health": [
+            {
+              "type": "INCIDENTS",
+              "status": "PASS"
+            }
+          ]
+        },
+        "degree": 1
+      }
+    ],
+    "offset": 0,
+    "returned": 2,
+    "hasMore": false
+  }
+}

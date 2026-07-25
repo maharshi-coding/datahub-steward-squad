@@ -1,0 +1,254 @@
+{
+  "downstreams": {
+    "total": 1,
+    "facets": [
+      {
+        "field": "degree",
+        "displayName": "Degree of Dependencies",
+        "aggregations": [
+          {
+            "value": "1",
+            "count": 0
+          },
+          {
+            "value": "2",
+            "count": 0
+          },
+          {
+            "value": "3+",
+            "count": 0
+          }
+        ]
+      },
+      {
+        "field": "_entityType",
+        "displayName": "Type",
+        "aggregations": [
+          {
+            "value": "DATASET",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "field": "platform",
+        "displayName": "Platform",
+        "aggregations": [
+          {
+            "value": "urn:li:dataPlatform:dbt",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:dataPlatform:dbt"
+            }
+          }
+        ]
+      },
+      {
+        "field": "domains",
+        "displayName": "Domain",
+        "aggregations": [
+          {
+            "value": "urn:li:domain:Finance",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:domain:Finance"
+            }
+          }
+        ]
+      },
+      {
+        "field": "tags",
+        "displayName": "Tagged With",
+        "aggregations": [
+          {
+            "value": "urn:li:tag:certified",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:tag:certified"
+            }
+          }
+        ]
+      },
+      {
+        "field": "glossaryTerms",
+        "displayName": "Glossary Term",
+        "aggregations": [
+          {
+            "value": "urn:li:glossaryTerm:Revenue",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:glossaryTerm:Revenue"
+            }
+          }
+        ]
+      },
+      {
+        "field": "owners",
+        "displayName": "Owned By",
+        "aggregations": [
+          {
+            "value": "urn:li:corpGroup:analytics-engineering",
+            "count": 1,
+            "entity": {
+              "urn": "urn:li:corpGroup:analytics-engineering"
+            }
+          }
+        ]
+      },
+      {
+        "field": "origin",
+        "displayName": "Environment",
+        "aggregations": [
+          {
+            "value": "PROD",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "field": "_entityType\u241etypeNames",
+        "displayName": "Type\u241eSub Type",
+        "aggregations": [
+          {
+            "value": "DATASET",
+            "count": 1
+          }
+        ]
+      },
+      {
+        "field": "removed",
+        "displayName": "removed",
+        "aggregations": [
+          {
+            "value": "true",
+            "count": 0
+          }
+        ]
+      },
+      {
+        "field": "entity",
+        "displayName": "Type",
+        "aggregations": [
+          {
+            "value": "DATASET",
+            "count": 1
+          }
+        ]
+      }
+    ],
+    "searchResults": [
+      {
+        "entity": {
+          "urn": "urn:li:dataset:(urn:li:dataPlatform:dbt,analytics.mart_revenue_by_region,PROD)",
+          "type": "DATASET",
+          "name": "analytics.mart_revenue_by_region",
+          "platform": {
+            "urn": "urn:li:dataPlatform:dbt",
+            "name": "dbt"
+          },
+          "properties": {
+            "name": "analytics.mart_revenue_by_region",
+            "description": "Regional revenue mart consumed by finance dashboards.",
+            "customProperties": [
+              {
+                "key": "usage_30d",
+                "value": "203"
+              },
+              {
+                "key": "certified",
+                "value": "true"
+              },
+              {
+                "key": "env",
+                "value": "PROD"
+              },
+              {
+                "key": "table",
+                "value": "analytics.mart_revenue_by_region"
+              },
+              {
+                "key": "domain",
+                "value": "Finance"
+              }
+            ]
+          },
+          "ownership": {
+            "owners": [
+              {
+                "owner": {
+                  "urn": "urn:li:corpGroup:analytics-engineering",
+                  "name": "analytics-engineering"
+                },
+                "type": "DATAOWNER",
+                "ownershipType": {
+                  "urn": "urn:li:ownershipType:__system__dataowner",
+                  "type": "CUSTOM_OWNERSHIP_TYPE"
+                }
+              }
+            ]
+          },
+          "tags": {
+            "tags": [
+              {
+                "tag": {
+                  "urn": "urn:li:tag:certified",
+                  "properties": {
+                    "name": "certified"
+                  }
+                }
+              }
+            ]
+          },
+          "glossaryTerms": {
+            "terms": [
+              {
+                "term": {
+                  "urn": "urn:li:glossaryTerm:Revenue",
+                  "hierarchicalName": "Revenue",
+                  "properties": {
+                    "name": "Revenue",
+                    "description": "Recognized revenue after refunds and credits.",
+                    "termSource": "INTERNAL"
+                  },
+                  "parentNodes": {
+                    "count": 0
+                  }
+                }
+              }
+            ]
+          },
+          "domain": {
+            "domain": {
+              "urn": "urn:li:domain:Finance",
+              "properties": {
+                "name": "Finance"
+              },
+              "parentDomains": {
+                "count": 0
+              },
+              "entities": {
+                "total": 5
+              },
+              "dataProducts": {
+                "total": 0
+              },
+              "children": {
+                "total": 0
+              }
+            }
+          },
+          "health": [
+            {
+              "type": "INCIDENTS",
+              "status": "PASS"
+            }
+          ]
+        },
+        "degree": 1
+      }
+    ],
+    "offset": 0,
+    "returned": 1,
+    "hasMore": false
+  }
+}

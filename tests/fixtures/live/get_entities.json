@@ -1,0 +1,159 @@
+[
+  {
+    "urn": "urn:li:dataset:(urn:li:dataPlatform:snowflake,finance.fct_revenue,PROD)",
+    "name": "finance.fct_revenue",
+    "platform": {
+      "urn": "urn:li:dataPlatform:snowflake",
+      "name": "snowflake"
+    },
+    "properties": {
+      "name": "finance.fct_revenue",
+      "description": "Certified revenue fact table used by Finance and executive reporting.",
+      "customProperties": [
+        {
+          "key": "usage_30d",
+          "value": "423"
+        },
+        {
+          "key": "certified",
+          "value": "true"
+        },
+        {
+          "key": "env",
+          "value": "PROD"
+        },
+        {
+          "key": "table",
+          "value": "finance.fct_revenue"
+        },
+        {
+          "key": "domain",
+          "value": "Finance"
+        }
+      ]
+    },
+    "ownership": {
+      "owners": [
+        {
+          "owner": {
+            "urn": "urn:li:corpGroup:finance-analytics",
+            "name": "finance-analytics"
+          },
+          "type": "DATAOWNER",
+          "ownershipType": {
+            "urn": "urn:li:ownershipType:__system__dataowner",
+            "type": "CUSTOM_OWNERSHIP_TYPE"
+          }
+        }
+      ]
+    },
+    "tags": {
+      "tags": [
+        {
+          "tag": {
+            "urn": "urn:li:tag:certified",
+            "properties": {
+              "name": "certified"
+            }
+          }
+        },
+        {
+          "tag": {
+            "urn": "urn:li:tag:tier_1",
+            "properties": {
+              "name": "tier_1"
+            }
+          }
+        }
+      ]
+    },
+    "glossaryTerms": {
+      "terms": [
+        {
+          "term": {
+            "urn": "urn:li:glossaryTerm:Revenue",
+            "hierarchicalName": "Revenue",
+            "properties": {
+              "name": "Revenue",
+              "description": "Recognized revenue after refunds and credits.",
+              "termSource": "INTERNAL"
+            },
+            "parentNodes": {
+              "count": 0
+            }
+          }
+        }
+      ]
+    },
+    "domain": {
+      "domain": {
+        "urn": "urn:li:domain:Finance",
+        "properties": {
+          "name": "Finance"
+        },
+        "parentDomains": {
+          "count": 0
+        },
+        "entities": {
+          "total": 5
+        },
+        "dataProducts": {
+          "total": 0
+        },
+        "children": {
+          "total": 0
+        }
+      }
+    },
+    "health": [
+      {
+        "type": "INCIDENTS",
+        "status": "PASS"
+      }
+    ],
+    "schemaMetadata": {
+      "name": "finance.fct_revenue",
+      "platformUrn": "urn:li:dataPlatform:snowflake",
+      "fields": [
+        {
+          "fieldPath": "customer_id",
+          "nativeDataType": "varchar",
+          "description": "Customer identifier.",
+          "nullable": false,
+          "glossaryTerms": [
+            "Customer"
+          ]
+        },
+        {
+          "fieldPath": "order_id",
+          "nativeDataType": "varchar",
+          "description": "Order identifier.",
+          "nullable": false
+        },
+        {
+          "fieldPath": "net_revenue_usd",
+          "nativeDataType": "number",
+          "nullable": false,
+          "glossaryTerms": [
+            "Revenue"
+          ]
+        },
+        {
+          "fieldPath": "_loaded_at",
+          "nativeDataType": "timestamp",
+          "nullable": false
+        },
+        {
+          "fieldPath": "customer_email",
+          "nativeDataType": "varchar",
+          "nullable": false
+        }
+      ]
+    },
+    "relatedDocuments": {
+      "start": 0,
+      "count": 10,
+      "total": 0
+    }
+  }
+]
