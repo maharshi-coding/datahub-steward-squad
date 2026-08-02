@@ -1,6 +1,6 @@
 # DataHub Steward Squad
 
-![tests](https://img.shields.io/badge/tests-25%20passing-brightgreen)
+![tests](https://img.shields.io/badge/tests-29%20passing-brightgreen)
 ![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue)
 ![License Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green)
 ![Offline path: stdlib only](https://img.shields.io/badge/offline%20path-stdlib%20only-brightgreen)
@@ -173,7 +173,7 @@ also point any MCP host (Claude Desktop, etc.) at the mock with
 python3 -m unittest discover -s tests
 ```
 
-25 tests, including the live adapter checked against recorded real-server
+29 tests, including the live adapter checked against recorded real-server
 responses in `tests/fixtures/live/` — so live parsing is covered without DataHub running.
 
 ## Demo Command

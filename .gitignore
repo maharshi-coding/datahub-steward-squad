@@ -16,3 +16,6 @@ venv/
 .DS_Store
 .idea/
 .vscode/
+
+# Demo-video tooling & rendered media (lives on YouTube / Devpost, not in the repo)
+video/
